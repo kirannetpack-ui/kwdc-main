@@ -117,6 +117,13 @@ class BankingPaymentTest extends TestCase
         $this->actingAs($this->admin)->post(route('admin.payments.bank-transfers.approve', $transaction))->assertRedirect();
         $this->assertSame('paid', $this->invoice->fresh()->payment_status);
         $this->assertSame('completed', $transaction->fresh()->status);
+        $this->actingAs($this->client)->post(route('payment.demo.invoice'))->assertRedirect();
+        $secondInvoice = Invoice::latest('id')->first();
+        $this->post(route('payment.demo.submit'), ['invoice_id' => $secondInvoice->id])->assertRedirect();
+        $secondTransaction = Transaction::latest('id')->first();
+        $this->actingAs($this->admin)->post(route('admin.payments.bank-transfers.approve', $secondTransaction))->assertRedirect();
+        $this->assertSame('paid', $secondInvoice->fresh()->payment_status);
+        $this->assertNotSame($transaction->fresh()->receipt_no, $secondTransaction->fresh()->receipt_no);
         config(['kwdc.demo' => false]);
         $this->actingAs($this->client)->post(route('payment.demo.submit'), ['invoice_id' => $this->invoice->id])->assertNotFound();
         \Illuminate\Support\Facades\Http::assertNothingSent();

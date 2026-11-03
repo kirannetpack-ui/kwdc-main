@@ -57,6 +57,7 @@ class Transaction extends Model
         $month = date('m');
         $lastTransaction = self::whereYear('created_at', $year)
             ->whereMonth('created_at', $month)
+            ->whereNotNull('receipt_no')
             ->orderBy('id', 'desc')
             ->first();
 
