@@ -15,6 +15,10 @@ class AppServiceProvider extends ServiceProvider
     {
         if (config('kwdc.demo')) {
             config(['mail.default' => 'array', 'sms.default' => 'log', 'services.ai.provider' => 'free']);
+            config([
+                'logging.channels.stderr.formatter' => \Monolog\Formatter\LineFormatter::class,
+                'logging.channels.stderr.formatter_with' => ['format' => '[%datetime%] %level_name%: %message%'.PHP_EOL],
+            ]);
         }
         // Force HTTPS in production
         if (config('app.env') === 'production') {
