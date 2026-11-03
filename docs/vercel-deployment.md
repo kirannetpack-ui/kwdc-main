@@ -20,7 +20,7 @@ The current deployment is an evaluation demo with `PHASE_ONE_DEMO=true` and `APP
 5. Host queue workers, the every-minute scheduler, and Reverb on a persistent worker service if these features are enabled. Vercel functions do not run these persistent processes.
 6. Create the initial administrator securely, complete login/email/document/payment checks, and set `APP_LAUNCH_READY=true` in Vercel before redeploying.
 
-The production project uses encrypted secure database sessions and a database cache, preserving shared rate limits across function instances. The pooled PostgreSQL connection uses emulated prepares; schema changes use Neon's direct connection.
+The project uses encrypted secure database sessions and a database cache, preserving shared rate limits across function instances. The evaluation deployment uses Neon's direct connection with native prepared statements (`DB_USE_DIRECT=true`, `DB_POOLED=false`); this avoids incompatible boolean binding with emulated prepares in Laravel 12. Schema changes also use the direct connection. The function runs in Singapore alongside the database.
 
 ## Deployment
 

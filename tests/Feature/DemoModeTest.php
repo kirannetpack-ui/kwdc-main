@@ -19,6 +19,8 @@ class DemoModeTest extends TestCase
             $user = \App\Models\User::where('email', $role.'.access@kwdc.test')->firstOrFail();
             $this->actingAs($user)->get('/dashboard')->assertOk();
         }
+        $this->actingAs(\App\Models\User::where('email', 'admin.access@kwdc.test')->firstOrFail())
+            ->get('/admin/invoices')->assertOk();
 
         $this->actingAs(\App\Models\User::where('email', 'client.access@kwdc.test')->firstOrFail())
             ->get('/payment')->assertOk()->assertSee('does not accept money')->assertDontSee('01100175023910');

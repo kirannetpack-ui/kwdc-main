@@ -179,8 +179,8 @@
                                 <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border {{ $badgeStyles }}">
                                     {{ ucfirst($status) }}
                                 </span>
-                                @if($inv->isBanned())
-                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-red-100 text-red-700 border border-red-300" title="{{ $inv->ban_reason }}">
+                                @if($invoice->isBanned())
+                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-red-100 text-red-700 border border-red-300" title="{{ $invoice->ban_reason }}">
                                     <i class="fas fa-ban text-[8px]"></i> QR Revoked
                                 </span>
                                 @endif
@@ -204,8 +204,8 @@
                                     <i class="fas fa-arrow-right text-[8px] opacity-60 group-hover:translate-x-0.5 transition-transform"></i>
                                 </a>
 
-                                @if($inv->isBanned())
-                                <form method="POST" action="{{ route('admin.invoices.unban-qr', $inv->id) }}" class="inline">
+                                @if($invoice->isBanned())
+                                <form method="POST" action="{{ route('admin.invoices.unban-qr', $invoice->id) }}" class="inline">
                                     @csrf
                                     <button type="submit" 
                                             class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 hover:bg-emerald-600 hover:text-white text-emerald-700 text-[10px] font-bold transition border border-emerald-300"
@@ -215,7 +215,7 @@
                                 </form>
                                 @else
                                 <button type="button" 
-                                        onclick="promptBanInvoice({{ $inv->id }}, '{{ $invNum }}')" 
+                                        onclick="promptBanInvoice({{ $invoice->id }}, '{{ $invNum }}')"
                                         class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-rose-50 hover:bg-rose-600 hover:text-white text-rose-700 text-[10px] font-bold transition border border-rose-300"
                                         title="Revoke and Ban QR Code">
                                     <i class="fas fa-ban text-[8px]"></i> Revoke QR
