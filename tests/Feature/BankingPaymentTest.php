@@ -99,6 +99,29 @@ class BankingPaymentTest extends TestCase
         $this->assertNotNull($transaction->payment_details['voucher_path']);
     }
 
+    public function test_demo_transfer_is_simulated_owned_and_idempotent(): void
+    {
+        config(['kwdc.demo' => true]);
+        \Illuminate\Support\Facades\Http::preventStrayRequests();
+        $this->actingAs($this->client)->post(route('payment.demo.submit'), ['invoice_id' => $this->invoice->id])
+            ->assertRedirect(route('payment.history'));
+        $this->post(route('payment.demo.submit'), ['invoice_id' => $this->invoice->id])
+            ->assertRedirect(route('payment.history'));
+        $this->assertSame(1, Transaction::count());
+        $this->assertTrue(Transaction::first()->payment_details['demo']);
+        $this->assertSame('unpaid', $this->invoice->fresh()->payment_status);
+
+        $other = User::factory()->create(['role' => 'client']);
+        $this->actingAs($other)->post(route('payment.demo.submit'), ['invoice_id' => $this->invoice->id])->assertNotFound();
+        $transaction = Transaction::first();
+        $this->actingAs($this->admin)->post(route('admin.payments.bank-transfers.approve', $transaction))->assertRedirect();
+        $this->assertSame('paid', $this->invoice->fresh()->payment_status);
+        $this->assertSame('completed', $transaction->fresh()->status);
+        config(['kwdc.demo' => false]);
+        $this->actingAs($this->client)->post(route('payment.demo.submit'), ['invoice_id' => $this->invoice->id])->assertNotFound();
+        \Illuminate\Support\Facades\Http::assertNothingSent();
+    }
+
     public function test_client_can_submit_banking_qr_payment(): void
     {
         $response = $this->actingAs($this->client)->post(route('payment.banking-qr.submit'), [

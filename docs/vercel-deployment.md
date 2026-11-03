@@ -9,7 +9,9 @@ The PHP application runs through the community `vercel-php@0.7.4` runtime (PHP 8
 
 ## Launch state
 
-`APP_LAUNCH_READY=false` leaves public information pages accessible and returns a friendly HTTP 503 for account access and business operations. Keep this protection enabled until the following are complete:
+The current deployment is an evaluation demo with `PHASE_ONE_DEMO=true` and `APP_LAUNCH_READY=true`. See [demo testing](demo-testing.md). The requirements below apply to a real business launch.
+
+`APP_LAUNCH_READY=false` leaves public information pages accessible and returns a friendly HTTP 503 for account access and business operations. Use this protection outside the evaluation demo until the following are complete:
 
 1. Initial migrations have been applied to the dedicated database. Do not seed demo accounts into a live business database.
 2. Connect transactional email using a verified sender and store SMTP credentials in Vercel. `MAIL_MAILER=log` does not deliver email.

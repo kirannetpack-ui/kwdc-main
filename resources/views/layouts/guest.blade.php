@@ -220,6 +220,7 @@
     <script src="{{ asset('js/kwdc-auth.js') }}" defer></script>
 </head>
 <body>
+@include('partials.demo-notice')
     <main class="guest-wrap">
         <section class="brand-panel">
             <a class="brand" href="{{ route('landing') }}">

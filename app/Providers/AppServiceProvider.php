@@ -13,6 +13,9 @@ class AppServiceProvider extends ServiceProvider
 {
     public function boot()
     {
+        if (config('kwdc.demo')) {
+            config(['mail.default' => 'array', 'sms.default' => 'log', 'services.ai.provider' => 'free']);
+        }
         // Force HTTPS in production
         if (config('app.env') === 'production') {
             URL::forceScheme('https');

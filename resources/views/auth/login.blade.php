@@ -240,6 +240,7 @@
     <script src="{{ asset('js/kwdc-auth.js') }}" defer></script>
 </head>
 <body>
+    @include('partials.demo-notice')
     <main class="auth-shell">
         <section class="brand-side">
             <a class="brand" href="{{ route('landing') }}">
@@ -251,6 +252,10 @@
         <section class="auth-card">
             <div class="card-head">
                 <h2>Welcome back.</h2>
+                @if(config('kwdc.demo'))
+                    <p>Try the client portal with <strong>client.access@kwdc.test</strong> or the admin portal with <strong>admin.access@kwdc.test</strong>.</p>
+                    <p>Demo password: <strong>KwdcNew2026!</strong></p>
+                @endif
             </div>
 
             @if($errors->any())

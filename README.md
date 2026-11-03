@@ -1,6 +1,6 @@
 # KTM-WDC (Kathmandu Warehousing & Distribution Center)
 
-Deployment URL: https://kwdc.vercel.app. The portal is protected while production email, file storage, and background services are configured. See [Vercel deployment status and setup](docs/vercel-deployment.md) for the remaining launch requirements; historical readiness claims below are not a completed production launch assessment.
+Deployment URL: https://kwdc.vercel.app. The portal currently runs as a shared evaluation demo with sample accounts and operational data. See [demo access and testing](docs/demo-testing.md) and [production setup requirements](docs/vercel-deployment.md). Historical readiness claims below are not a completed production launch assessment.
 
 [![PHP Version](https://img.shields.io/badge/PHP-8.2%2B-blue.svg)](https://php.net)
 [![Laravel Framework](https://img.shields.io/badge/Laravel-12.x-red.svg)](https://laravel.com)

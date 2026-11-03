@@ -1,7 +1,9 @@
 <?php
 
 // Opt-in schema setup runs in Vercel's build environment, never in HTTP requests.
-if (getenv('VERCEL_ENV') !== 'production' || getenv('VERCEL_RUN_MIGRATIONS') !== 'true') {
+$runMigrations = getenv('VERCEL_RUN_MIGRATIONS') === 'true';
+$seedDemo = getenv('KWDC_SEED_DEMO') === 'true';
+if (getenv('VERCEL_ENV') !== 'production' || (! $runMigrations && ! $seedDemo)) {
     exit(0);
 }
 
@@ -29,6 +31,27 @@ foreach (['bootstrap/cache', 'storage/framework/views', 'storage/framework/cache
 
 require __DIR__.'/../../vendor/autoload.php';
 $app = require __DIR__.'/../../bootstrap/app.php';
-exit($app->handleCommand(new Symfony\Component\Console\Input\ArrayInput([
-    'command' => 'migrate', '--force' => true,
-])));
+$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+
+if ($runMigrations && Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]) !== 0) {
+    fwrite(STDERR, Illuminate\Support\Facades\Artisan::output());
+    exit(1);
+}
+
+if ($seedDemo) {
+    if (! config('kwdc.demo') || App\Models\User::where('email', 'not like', '%@kwdc.test')->exists()) {
+        fwrite(STDERR, "Demo seeding requires demo mode and a database without real accounts.\n");
+        exit(1);
+    }
+    Illuminate\Support\Facades\DB::transaction(function () {
+        $result = Illuminate\Support\Facades\Artisan::call('db:seed', [
+            '--class' => Database\Seeders\NepaliDemoSeeder::class, '--force' => true,
+        ]);
+        if ($result !== 0) {
+            throw new RuntimeException('Demo sample data setup failed.');
+        }
+    });
+    echo "Demo sample accounts and records prepared.\n";
+}
+
+echo "Deployment database preparation complete.\n";

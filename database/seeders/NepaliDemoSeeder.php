@@ -11,6 +11,7 @@ use Illuminate\Support\Str;
 
 class NepaliDemoSeeder extends Seeder
 {
+    private array $columnCache = [];
     public function run(): void
     {
         $password = Hash::make('KwdcNew2026!');
@@ -983,10 +984,8 @@ class NepaliDemoSeeder extends Seeder
 
     private function onlyColumns(string $table, array $data): array
     {
-        if (!Schema::hasTable($table)) {
-            return [];
-        }
+        $this->columnCache[$table] ??= array_flip(Schema::getColumnListing($table));
 
-        return array_intersect_key($data, array_flip(Schema::getColumnListing($table)));
+        return array_intersect_key($data, $this->columnCache[$table]);
     }
 }

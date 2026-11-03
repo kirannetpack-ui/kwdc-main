@@ -17,6 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\ForceHttps::class,
             \App\Http\Middleware\SecurityHeaders::class,
             \App\Http\Middleware\EnsureLaunchReady::class,
+            \App\Http\Middleware\ProtectDemoMode::class,
         ]);
 
         $middleware->web(append: [

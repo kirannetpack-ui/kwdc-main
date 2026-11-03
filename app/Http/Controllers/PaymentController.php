@@ -44,7 +44,7 @@ class PaymentController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
         
-        return view('payment.index', compact('invoices'));
+        return view(config('kwdc.demo') ? 'payment.demo' : 'payment.index', compact('invoices'));
     }
 
     /**
@@ -456,6 +456,35 @@ class PaymentController extends Controller
             ->paginate(20);
         
         return view('payment.history', compact('transactions'));
+    }
+
+    public function demoTransfer(Request $request)
+    {
+        abort_unless(config('kwdc.demo'), 404);
+        $request->validate(['invoice_id' => 'required|integer|exists:invoices,id']);
+        $invoice = $this->payableInvoice((int) $request->invoice_id);
+        $reference = 'DEMO-'.\Illuminate\Support\Str::uuid();
+        Transaction::firstOrCreate([
+            'invoice_id' => $invoice->id,
+            'user_id' => auth()->id(),
+            'payment_method' => 'bank_transfer',
+            'status' => 'pending',
+        ], [
+            'amount' => $this->invoicePayableAmount($invoice),
+            'tax' => 0,
+            'transaction_id' => $reference,
+            'notes' => 'DEMO SIMULATION — no money transferred.',
+            'payment_details' => [
+                'demo' => true,
+                'bank_name' => 'Demo bank — simulation only',
+                'depositor_name' => auth()->user()->name,
+                'reference_number' => $reference,
+                'transfer_date' => now()->toDateString(),
+                'voucher_path' => null,
+            ],
+        ]);
+
+        return redirect()->route('payment.history')->with('success', 'Demo transfer recorded. Sign in as administrator to test approval. No money was transferred.');
     }
 
     /**

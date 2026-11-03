@@ -221,6 +221,7 @@ Route::middleware(['auth', 'account.ready'])->group(function () {
 
     // ==================== PAYMENT ====================
     Route::prefix('payment')->name('payment.')->group(function () {
+        Route::post('/demo/submit', [PaymentController::class, 'demoTransfer'])->name('demo.submit')->middleware('throttle:10,1');
         Route::get('/', [PaymentController::class, 'index'])->name('index');
         Route::post('/khalti/init', [PaymentController::class, 'khaltiInit'])->name('khalti.init')->middleware('throttle:10,1');
         Route::get('/khalti/verify', [PaymentController::class, 'khaltiVerify'])->name('khalti.verify')->middleware('throttle:20,1');

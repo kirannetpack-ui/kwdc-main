@@ -143,6 +143,7 @@
     <script src="{{ asset('js/kwdc-records.js') }}" defer></script>
 </head>
 <body class="kwdc-app-shell">
+@include('partials.demo-notice')
 <div id="kwdc-page-progress" aria-hidden="true"></div>
 
 <!-- Mobile Menu Toggle -->

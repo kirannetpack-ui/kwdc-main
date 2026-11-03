@@ -67,6 +67,7 @@
     </style>
 </head>
 <body>
+    @include('partials.demo-notice')
     @unless(config('kwdc.launch_ready'))
         <div role="status" style="padding:12px 20px;text-align:center;background:#fff7ed;color:#9a3412;font:500 14px/1.5 system-ui,sans-serif;">
             Portal setup is in progress. Account access and bookings will open soon.
