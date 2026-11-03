@@ -1,0 +1,871 @@
+/* ==========================================================================
+   KTM-WDC Claude-Inspired Design System (Editorial & Warm Tactile Aesthetics)
+   ========================================================================== */
+
+:root {
+    /* Canvas & Surfaces */
+    --claude-bg: #FAF8F5;              /* Warm parchment background */
+    --claude-bg-subtle: #F3EFEA;       /* Secondary warm canvas */
+    --claude-surface: #FFFFFF;         /* Pure card surface */
+    --claude-surface-warm: #FFFDF9;    /* Ivory elevated surface */
+    --claude-border: #E8E2D8;          /* Soft warm sepia border */
+    --claude-border-subtle: #F0EAE1;   /* Hairline container border */
+    --claude-border-strong: #D6CCC0;   /* High-contrast border */
+
+    /* Typography & Text */
+    --claude-text-primary: #24201D;    /* Deep espresso charcoal (never harsh black) */
+    --claude-text-body: #57524C;       /* Warm readable slate-brown */
+    --claude-text-muted: #8A8379;      /* Muted captions & metadata */
+    --claude-text-light: #B4ACA2;      /* Hairline labels & placeholders */
+
+    /* Signature Terracotta Accents (Anthropic Claude) */
+    --claude-terracotta: #D96B43;      /* Rich terracotta */
+    --claude-terracotta-hover: #C35832;/* Deep terracotta hover */
+    --claude-terracotta-soft: #FBF2ED; /* Warm terracotta tint */
+    --claude-terracotta-border: #F3D5C7;
+    --claude-terracotta-ring: rgba(217, 107, 67, 0.18);
+
+    /* Organic Semantic Accents */
+    --claude-sage: #3D7357;            /* Organic sage green (success) */
+    --claude-sage-soft: #EFF6F1;
+    --claude-sage-border: #D4E7DC;
+
+    --claude-honey: #B8732A;           /* Warm honey amber (pending/warning) */
+    --claude-honey-soft: #FDF5EB;
+    --claude-honey-border: #F6E3CA;
+
+    --claude-rose: #C24838;            /* Terracotta rose (error/danger) */
+    --claude-rose-soft: #FDF0EE;
+    --claude-rose-border: #F7D2CC;
+
+    --claude-iris: #4F6B94;            /* Soft slate iris (information) */
+    --claude-iris-soft: #F0F4FA;
+    --claude-iris-border: #D3DFEE;
+
+    /* Deep Warm Espresso Sidebar */
+    --claude-sidebar-bg: #1D1A18;
+    --claude-sidebar-border: rgba(255, 255, 255, 0.08);
+    --claude-sidebar-text: #ABA39B;
+    --claude-sidebar-text-active: #FFFFFF;
+    --claude-sidebar-active-bg: rgba(217, 107, 67, 0.22);
+    --claude-sidebar-active-border: #D96B43;
+
+    /* Elevation Shadows */
+    --claude-shadow-sm: 0 1px 3px rgba(60, 45, 30, 0.03), 0 1px 2px rgba(60, 45, 30, 0.02);
+    --claude-shadow-md: 0 4px 20px -2px rgba(60, 45, 30, 0.04), 0 2px 6px -1px rgba(60, 45, 30, 0.02);
+    --claude-shadow-lg: 0 12px 32px -4px rgba(60, 45, 30, 0.07), 0 4px 12px -2px rgba(60, 45, 30, 0.03);
+
+    /* Fonts */
+    --font-serif: 'Newsreader', Garamond, Georgia, serif;
+    --font-sans: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* ==========================================================================
+   Global Atmosphere & Base Shell
+   ========================================================================== */
+
+html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+body.kwdc-app-shell {
+    background-color: var(--claude-bg);
+    background-image: 
+        radial-gradient(circle at 10% 8%, rgba(217, 107, 67, 0.04) 0%, transparent 35%),
+        radial-gradient(circle at 90% 12%, rgba(184, 115, 42, 0.03) 0%, transparent 40%);
+    color: var(--claude-text-primary);
+    font-family: var(--font-sans);
+    letter-spacing: -0.01em;
+    line-height: 1.6;
+}
+
+/* Editorial Typography */
+h1, h2, h3, .font-serif, .kwdc-serif, .kwdc-serif-heading {
+    font-family: var(--font-serif) !important;
+    font-feature-settings: "opsz" auto, "liga" 1;
+    color: var(--claude-text-primary);
+    font-weight: 600;
+    letter-spacing: -0.015em;
+}
+
+p, span, label, input, button, select, textarea {
+    font-family: var(--font-sans);
+}
+
+/* ==========================================================================
+   Deep Warm Espresso Sidebar
+   ========================================================================== */
+
+.kwdc-app-shell .sidebar,
+.sidebar {
+    background: var(--claude-sidebar-bg) !important;
+    color: #F8F5F1 !important;
+    border-right: 1px solid var(--claude-sidebar-border) !important;
+    box-shadow: 4px 0 24px rgba(29, 26, 24, 0.15) !important;
+}
+
+.kwdc-app-shell .sidebar .kwdc-sidebar-brand {
+    padding: 24px 20px 18px;
+    border-bottom: 1px solid var(--claude-sidebar-border);
+    margin-bottom: 8px;
+}
+
+.kwdc-app-shell .sidebar .kwdc-sidebar-brand h1 {
+    font-family: var(--font-serif) !important;
+    color: #FFFFFF !important;
+    font-weight: 600 !important;
+    font-size: 20px !important;
+    letter-spacing: -0.01em !important;
+    margin: 0;
+}
+
+.kwdc-app-shell .sidebar .kwdc-sidebar-brand p {
+    color: var(--claude-sidebar-text) !important;
+    font-size: 11px;
+    font-weight: 500;
+    margin: 2px 0 0;
+}
+
+.kwdc-sidebar-brand .kwdc-brand-icon {
+    background: linear-gradient(135deg, var(--claude-terracotta) 0%, var(--claude-terracotta-hover) 100%) !important;
+    box-shadow: 0 4px 14px rgba(217, 107, 67, 0.35) !important;
+    border-radius: 12px !important;
+}
+
+.kwdc-app-shell .sidebar .sidebar-link {
+    color: var(--claude-sidebar-text) !important;
+    font-weight: 500;
+    font-size: 13px;
+    border-radius: 10px;
+    margin: 3px 12px;
+    padding: 9px 13px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-left: 3px solid transparent;
+    transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.kwdc-app-shell .sidebar .sidebar-link:hover {
+    color: #FFFFFF !important;
+    background: rgba(255, 255, 255, 0.06) !important;
+    transform: translateX(2px);
+}
+
+.kwdc-app-shell .sidebar .sidebar-link.active {
+    background: var(--claude-sidebar-active-bg) !important;
+    color: #FFFFFF !important;
+    font-weight: 600;
+    border-left: 3px solid var(--claude-terracotta) !important;
+    box-shadow: inset 0 0 0 1px rgba(217, 107, 67, 0.25) !important;
+}
+
+.kwdc-app-shell .sidebar .sidebar-link.active i {
+    color: var(--claude-terracotta) !important;
+}
+
+.kwdc-app-shell .sidebar .sidebar-link i {
+    width: 20px;
+    text-align: center;
+    font-size: 14px;
+    color: inherit;
+    background: transparent !important;
+}
+
+.kwdc-app-shell .sidebar .sidebar-link .badge {
+    background: var(--claude-terracotta) !important;
+    color: #FFFFFF !important;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 9999px;
+    margin-left: auto;
+}
+
+.kwdc-app-shell .sidebar .section-header {
+    color: #8C847B !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.12em !important;
+    text-transform: uppercase;
+    padding: 16px 20px 5px;
+    display: block !important;
+}
+
+/* ==========================================================================
+   Frosted Warm Top Bar
+   ========================================================================== */
+
+.kwdc-app-shell .top-bar,
+.top-bar {
+    background: rgba(250, 248, 245, 0.92) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    border-bottom: 1px solid var(--claude-border) !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+    box-shadow: 0 1px 3px rgba(60, 45, 30, 0.02) !important;
+    padding: 0 24px !important;
+    min-height: 56px !important;
+    height: 56px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 40 !important;
+}
+
+.top-bar #kwdc-topbar-header {
+    font-family: var(--font-serif) !important;
+    font-size: 16px !important;
+    font-weight: 600 !important;
+    color: var(--claude-text-primary) !important;
+    letter-spacing: -0.01em !important;
+}
+
+/* Search or Ask AI Pill Button */
+.kwdc-topbar-search {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    height: 38px !important;
+    padding: 0 14px !important;
+    background: #FFFFFF !important;
+    border: 1px solid var(--claude-border) !important;
+    border-radius: 9999px !important;
+    color: var(--claude-text-body) !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    cursor: pointer !important;
+    transition: all 0.18s ease !important;
+    width: 240px !important;
+    max-width: 280px !important;
+    box-sizing: border-box !important;
+    box-shadow: 0 1px 2px rgba(60, 45, 30, 0.02) !important;
+    text-decoration: none !important;
+}
+
+.kwdc-topbar-search:hover {
+    background: #FFFFFF !important;
+    border-color: var(--claude-terracotta) !important;
+    color: var(--claude-text-primary) !important;
+    box-shadow: 0 2px 10px rgba(217, 107, 67, 0.12) !important;
+}
+
+.kwdc-topbar-search i {
+    color: var(--claude-terracotta) !important;
+}
+
+.kwdc-topbar-search .kwdc-kbd {
+    margin-left: auto !important;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    color: var(--claude-text-muted) !important;
+    background: var(--claude-bg) !important;
+    border: 1px solid var(--claude-border) !important;
+    border-radius: 6px !important;
+    padding: 2px 6px !important;
+    line-height: 1 !important;
+}
+
+/* User Profile Badge in Topbar */
+.kwdc-topbar-profile {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    padding: 4px 12px 4px 5px !important;
+    border-radius: 9999px !important;
+    background: #FFFFFF !important;
+    border: 1px solid var(--claude-border) !important;
+    text-decoration: none !important;
+    cursor: pointer !important;
+    box-shadow: var(--claude-shadow-sm) !important;
+    transition: all 0.16s ease !important;
+}
+
+.kwdc-topbar-profile:hover {
+    background: #FFFFFF !important;
+    border-color: var(--claude-terracotta) !important;
+    box-shadow: 0 2px 8px rgba(217, 107, 67, 0.1) !important;
+}
+
+.kwdc-topbar-avatar {
+    width: 28px !important;
+    height: 28px !important;
+    border-radius: 50% !important;
+    background: var(--claude-terracotta-soft) !important;
+    color: var(--claude-terracotta) !important;
+    font-weight: 700 !important;
+    font-size: 11px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border: 1px solid var(--claude-terracotta-border) !important;
+}
+
+.kwdc-topbar-name {
+    font-size: 12.5px !important;
+    font-weight: 600 !important;
+    color: var(--claude-text-primary) !important;
+}
+
+.kwdc-topbar-role {
+    font-size: 10.5px !important;
+    color: var(--claude-text-muted) !important;
+}
+
+/* ==========================================================================
+   Tactile Card Surfaces & Containers
+   ========================================================================== */
+
+.kwdc-app-shell .main-content :is(.card, .kwdc-panel, .kwdc-glass-card, .shadow-md, .shadow-lg) {
+    box-shadow: var(--claude-shadow-md) !important;
+    border: 1px solid var(--claude-border) !important;
+    border-radius: 18px !important;
+    background: #FFFFFF !important;
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease !important;
+}
+
+.kwdc-app-shell .main-content :is(.card, .kwdc-panel, .kwdc-glass-card):hover {
+    border-color: var(--claude-border-strong) !important;
+}
+
+.kwdc-kpi-card {
+    background: #FFFFFF !important;
+    border: 1px solid var(--claude-border) !important;
+    border-radius: 18px !important;
+    padding: 22px !important;
+    box-shadow: var(--claude-shadow-sm) !important;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.kwdc-kpi-card:hover {
+    transform: translateY(-2px) !important;
+    border-color: var(--claude-border-strong) !important;
+    box-shadow: var(--claude-shadow-md) !important;
+}
+
+.kwdc-kpi-val {
+    font-family: var(--font-serif) !important;
+    font-size: 28px !important;
+    font-weight: 600 !important;
+    letter-spacing: -0.02em !important;
+    color: var(--claude-text-primary) !important;
+    line-height: 1.1 !important;
+}
+
+/* Hero Welcome Block */
+.kwdc-hero-welcome {
+    background: #FFFFFF !important;
+    border: 1px solid var(--claude-border) !important;
+    border-radius: 20px !important;
+    padding: 26px !important;
+    box-shadow: var(--claude-shadow-md) !important;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.kwdc-hero-welcome h1 {
+    font-family: var(--font-serif) !important;
+    font-size: 28px !important;
+    font-weight: 600 !important;
+    color: var(--claude-text-primary) !important;
+    letter-spacing: -0.02em !important;
+}
+
+/* AI Logistics Brief Card */
+.kwdc-brief-card {
+    background: #FFFFFF !important;
+    border: 1px solid var(--claude-border) !important;
+    border-radius: 20px !important;
+    padding: 26px !important;
+    box-shadow: var(--claude-shadow-md) !important;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.kwdc-brief-card:hover {
+    border-color: var(--claude-border-strong) !important;
+    box-shadow: var(--claude-shadow-lg) !important;
+}
+
+.kwdc-brief-card h2 {
+    font-family: var(--font-serif) !important;
+    font-size: 17px !important;
+    font-weight: 600 !important;
+    color: var(--claude-text-primary) !important;
+}
+
+.kwdc-insight-row,
+.kwdc-signal-row {
+    background: var(--claude-bg) !important;
+    border: 1px solid var(--claude-border-subtle) !important;
+    border-radius: 12px !important;
+    padding: 11px 14px !important;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    transition: all 0.16s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.kwdc-insight-row:hover,
+.kwdc-signal-row:hover {
+    background: #FFFFFF !important;
+    border-color: var(--claude-border) !important;
+    transform: translateX(1px);
+    box-shadow: var(--claude-shadow-sm) !important;
+}
+
+/* Priority Banner (Warm Amber & Terracotta Accent) */
+.kwdc-priority-box,
+.kwdc-priority-banner {
+    background: var(--claude-honey-soft) !important;
+    border: 1px solid var(--claude-honey-border) !important;
+    border-left: 4px solid var(--claude-terracotta) !important;
+    border-radius: 14px !important;
+    padding: 13px 18px !important;
+    transition: all 0.16s ease !important;
+}
+
+.kwdc-priority-banner strong {
+    color: var(--claude-terracotta-hover) !important;
+}
+
+/* ==========================================================================
+   Buttons & Interactive Pills
+   ========================================================================== */
+
+/* Primary Terracotta Action Button */
+.btn-primary,
+button.btn-primary,
+a.btn-primary,
+.kwdc-action-btn.primary,
+.button-dark {
+    background: var(--claude-terracotta) !important;
+    border: 1px solid var(--claude-terracotta-hover) !important;
+    color: #FFFFFF !important;
+    border-radius: 9999px !important;
+    font-weight: 600 !important;
+    padding: 8px 18px !important;
+    box-shadow: 0 2px 8px rgba(217, 107, 67, 0.22) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    text-decoration: none !important;
+    transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.btn-primary:hover,
+button.btn-primary:hover,
+a.btn-primary:hover,
+.kwdc-action-btn.primary:hover,
+.button-dark:hover {
+    background: var(--claude-terracotta-hover) !important;
+    border-color: #A84522 !important;
+    color: #FFFFFF !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 14px rgba(217, 107, 67, 0.32) !important;
+}
+
+.btn-primary:active,
+.button-dark:active {
+    transform: scale(0.98) !important;
+}
+
+/* Secondary Button / Action Pill */
+.kwdc-action-pill,
+.kwdc-action-btn,
+.btn-outline-secondary {
+    background: #FFFFFF !important;
+    border: 1px solid var(--claude-border) !important;
+    border-radius: 9999px !important;
+    padding: 8px 16px !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    color: var(--claude-text-body) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    text-decoration: none !important;
+    box-shadow: var(--claude-shadow-sm) !important;
+    transition: all 0.16s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.kwdc-action-pill:hover,
+.kwdc-action-btn:hover,
+.btn-outline-secondary:hover {
+    background: var(--claude-bg) !important;
+    border-color: var(--claude-border-strong) !important;
+    color: var(--claude-text-primary) !important;
+    transform: translateY(-1px) !important;
+}
+
+.kwdc-action-badge {
+    background: var(--claude-terracotta-soft) !important;
+    color: var(--claude-terracotta) !important;
+    border: 1px solid var(--claude-terracotta-border) !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    border-radius: 9999px !important;
+    padding: 1px 6px !important;
+}
+
+/* ==========================================================================
+   Semantic Status Badges (Organic Sage, Honey, Terracotta)
+   ========================================================================== */
+
+.kwdc-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 10px;
+    border-radius: 9999px;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+.kwdc-badge-success,
+.bg-emerald-50.text-emerald-700 {
+    background: var(--claude-sage-soft) !important;
+    color: var(--claude-sage) !important;
+    border: 1px solid var(--claude-sage-border) !important;
+}
+
+.kwdc-badge-warning,
+.bg-amber-50.text-amber-700,
+.bg-amber-50.text-amber-800 {
+    background: var(--claude-honey-soft) !important;
+    color: var(--claude-honey) !important;
+    border: 1px solid var(--claude-honey-border) !important;
+}
+
+.kwdc-badge-danger,
+.bg-red-50.text-red-700 {
+    background: var(--claude-rose-soft) !important;
+    color: var(--claude-rose) !important;
+    border: 1px solid var(--claude-rose-border) !important;
+}
+
+.kwdc-badge-info,
+.bg-blue-50.text-blue-700 {
+    background: var(--claude-iris-soft) !important;
+    color: var(--claude-iris) !important;
+    border: 1px solid var(--claude-iris-border) !important;
+}
+
+.kwdc-badge-neutral,
+.bg-slate-100.text-slate-600 {
+    background: var(--claude-bg) !important;
+    color: var(--claude-text-body) !important;
+    border: 1px solid var(--claude-border) !important;
+}
+
+/* Live Operational Beacon */
+.kwdc-beacon-container {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 7px !important;
+    padding: 5px 12px !important;
+    background: var(--claude-sage-soft) !important;
+    border: 1px solid var(--claude-sage-border) !important;
+    border-radius: 9999px !important;
+    font-size: 11.5px !important;
+    font-weight: 700 !important;
+    color: var(--claude-sage) !important;
+}
+
+.kwdc-beacon-dot {
+    width: 7px !important;
+    height: 7px !important;
+    border-radius: 50% !important;
+    background: var(--claude-sage) !important;
+    box-shadow: 0 0 0 3px rgba(61, 115, 87, 0.25) !important;
+    animation: kwdcBeaconPulse 2s infinite ease-in-out !important;
+}
+
+@keyframes kwdcBeaconPulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(1.2); }
+}
+
+/* ==========================================================================
+   Refined Form Controls
+   ========================================================================== */
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="tel"],
+input[type="date"],
+input[type="datetime-local"],
+select,
+textarea {
+    border: 1px solid var(--claude-border) !important;
+    border-radius: 12px !important;
+    padding: 10px 14px !important;
+    font-size: 13.5px !important;
+    color: var(--claude-text-primary) !important;
+    background-color: #FFFFFF !important;
+    box-shadow: 0 1px 2px rgba(60, 45, 30, 0.02) !important;
+    transition: all 0.16s ease !important;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+    outline: none !important;
+    border-color: var(--claude-terracotta) !important;
+    box-shadow: 0 0 0 3.5px var(--claude-terracotta-ring) !important;
+    background-color: #FFFFFF !important;
+}
+
+/* Clean Search Input */
+.kwdc-clean-search-input {
+    width: 100% !important;
+    height: 34px !important;
+    min-height: 34px !important;
+    padding-left: 32px !important;
+    padding-right: 28px !important;
+    border-radius: 9999px !important;
+    border: 1px solid var(--claude-border) !important;
+    background: #FFFFFF !important;
+    color: var(--claude-text-primary) !important;
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    box-shadow: var(--claude-shadow-sm) !important;
+    transition: all 0.15s ease !important;
+}
+
+.kwdc-clean-search-input:hover {
+    border-color: var(--claude-border-strong) !important;
+}
+
+.kwdc-clean-search-input:focus {
+    border-color: var(--claude-terracotta) !important;
+    box-shadow: 0 0 0 3.5px var(--claude-terracotta-ring) !important;
+}
+
+/* ==========================================================================
+   Data Tables
+   ========================================================================== */
+
+table.table,
+table {
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+    width: 100% !important;
+}
+
+table th,
+.kwdc-table-fixed th {
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+    color: var(--claude-text-muted) !important;
+    background: #F7F3EE !important;
+    border-bottom: 1px solid var(--claude-border) !important;
+    padding: 10px 14px !important;
+}
+
+table td,
+.kwdc-table-fixed td {
+    padding: 10px 14px !important;
+    font-size: 12.5px !important;
+    color: var(--claude-text-primary) !important;
+    border-bottom: 1px solid var(--claude-border-subtle) !important;
+    vertical-align: middle !important;
+}
+
+table tr:hover td,
+.kwdc-table-fixed tr:hover td {
+    background-color: #FAF5EE !important;
+}
+
+/* ==========================================================================
+   Floating AI Copilot Orb (Anthropic Sparkle)
+   ========================================================================== */
+
+.kwdc-app-shell .kwdc-assistant-launch,
+.kwdc-assistant-launch {
+    position: fixed !important;
+    bottom: 26px !important;
+    right: 26px !important;
+    z-index: 99999 !important;
+    width: 54px !important;
+    height: 54px !important;
+    border-radius: 50% !important;
+    background: var(--claude-sidebar-bg) !important;
+    color: var(--claude-terracotta) !important;
+    border: 1.5px solid var(--claude-terracotta) !important;
+    box-shadow: 0 10px 30px -4px rgba(29, 26, 24, 0.35), 0 0 20px rgba(217, 107, 67, 0.25) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    outline: none !important;
+    transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.kwdc-app-shell .kwdc-assistant-launch:hover,
+.kwdc-assistant-launch:hover {
+    transform: translateY(-3px) scale(1.06) !important;
+    background: #2D2722 !important;
+    border-color: #E27B55 !important;
+    color: #FFFFFF !important;
+    box-shadow: 0 14px 36px -4px rgba(29, 26, 24, 0.45), 0 0 28px rgba(217, 107, 67, 0.45) !important;
+}
+
+.kwdc-app-shell .kwdc-assistant-launch:active,
+.kwdc-assistant-launch:active {
+    transform: translateY(0) scale(0.96) !important;
+}
+
+/* ==========================================================================
+   Scrollbars & Smooth Page Transitions
+   ========================================================================== */
+
+::-webkit-scrollbar {
+    width: 7px;
+    height: 7px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(138, 131, 121, 0.28);
+    border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(138, 131, 121, 0.48);
+}
+
+.page-content {
+    animation: kwdcPageIn 0.26s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes kwdcPageIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Tab Pills */
+.kwdc-tab-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 12px;
+    border-radius: 9999px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--claude-text-body) !important;
+    background: transparent !important;
+    border: none !important;
+    cursor: pointer;
+    transition: all 0.16s ease;
+}
+
+.kwdc-tab-pill:hover {
+    color: var(--claude-text-primary) !important;
+    background: rgba(255, 255, 255, 0.8) !important;
+}
+
+.kwdc-tab-pill.active {
+    color: #FFFFFF !important;
+    background: var(--claude-text-primary) !important;
+    font-weight: 600;
+    box-shadow: var(--claude-shadow-sm) !important;
+}
+
+.kwdc-tab-pill.active .tab-count-badge {
+    background: rgba(255, 255, 255, 0.25) !important;
+    color: #FFFFFF !important;
+}
+
+.tab-count-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5px 6px;
+    border-radius: 9999px;
+    font-size: 9.5px;
+    font-weight: 700;
+    background: var(--claude-border);
+    color: var(--claude-text-body);
+}
+
+/* Pager Buttons */
+.page-size-btn,
+.pager-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--claude-border);
+    background: #FFFFFF;
+    color: var(--claude-text-body);
+    font-size: 11.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.14s ease;
+}
+
+.page-size-btn:hover:not(.active),
+.pager-btn:hover:not(.disabled):not(.active) {
+    background: var(--claude-bg);
+    color: var(--claude-text-primary);
+    border-color: var(--claude-border-strong);
+}
+
+.page-size-btn.active,
+.pager-btn.active {
+    background: var(--claude-text-primary) !important;
+    color: #FFFFFF !important;
+    border-color: var(--claude-text-primary) !important;
+}
+
+/* Local Gateway Branded Buttons */
+.btn-khalti {
+    background-color: #5C2D91 !important;
+    color: #ffffff !important;
+    border: 1px solid #4A2277 !important;
+    font-weight: 600 !important;
+    box-shadow: 0 1px 3px rgba(92, 45, 145, 0.25) !important;
+    transition: all 0.15s ease !important;
+}
+
+.btn-khalti:hover {
+    background-color: #4A2277 !important;
+    color: #ffffff !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(92, 45, 145, 0.3) !important;
+}
+
+.btn-esewa {
+    background-color: #43A047 !important;
+    color: #ffffff !important;
+    border: 1px solid #2E7D32 !important;
+    font-weight: 600 !important;
+    box-shadow: 0 1px 3px rgba(67, 160, 71, 0.25) !important;
+    transition: all 0.15s ease !important;
+}
+
+.btn-esewa:hover {
+    background-color: #388E3C !important;
+    color: #ffffff !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(67, 160, 71, 0.3) !important;
+}

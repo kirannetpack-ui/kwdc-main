@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Offline Mode | KTM-WDC Logistics</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif; }
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            color: #0f172a;
+            padding: 24px;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            border-radius: 24px;
+            padding: 40px 32px;
+            max-width: 440px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.05);
+        }
+        .icon-circle {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: #fff7ed;
+            border: 1px solid #ffedd5;
+            color: #ea580c;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 28px;
+        }
+        h1 { font-size: 20px; font-weight: 800; margin-bottom: 8px; letter-spacing: -0.02em; }
+        p { font-size: 14px; color: #64748b; line-height: 1.5; margin-bottom: 24px; }
+        .offline-badge {
+            display: inline-block;
+            background: #fee2e2;
+            color: #991b1b;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 4px 12px;
+            border-radius: 9999px;
+            margin-bottom: 16px;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+        .btn {
+            display: inline-block;
+            background: #ea580c;
+            color: #fff;
+            padding: 12px 28px;
+            border-radius: 9999px;
+            font-size: 13px;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(234, 88, 12, 0.25);
+            border: none;
+            cursor: pointer;
+        }
+        .btn:hover { background: #c2410c; transform: translateY(-1px); }
+        .hotline { margin-top: 24px; font-size: 12px; color: #94a3b8; }
+        .hotline strong { color: #475569; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="icon-circle">📡</div>
+        <span class="offline-badge">Offline Mode / इन्टरनेट सम्पर्क विच्छेद</span>
+        <h1>You are Currently Offline</h1>
+        <p>You appear to be travelling through a cellular dead zone. Your pending Proof of Delivery (POD) scans and offline logs are saved safely in your device and will sync automatically once network connectivity is restored.</p>
+        <button onclick="window.location.reload()" class="btn">Check Connection / पुनः प्रयास गर्नुहोस्</button>
+        <div class="hotline">
+            Logistics Dispatch Hotline: <strong>+977-1-4991200</strong>
+        </div>
+    </div>
+</body>
+</html>

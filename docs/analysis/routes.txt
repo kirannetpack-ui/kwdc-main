@@ -1,0 +1,22 @@
+
+   ReflectionException 
+
+  Class "App\Http\Controllers\DispatchController" does not exist
+
+  at vendor\laravel\framework\src\Illuminate\Foundation\Console\RouteListCommand.php:272
+    [90m268[0m[90m▕ [0m[35;1m            if ([0m[39;1m$this[0m[35;1m->[0m[39;1misFrameworkController[0m[35;1m([0m[39;1m$route[0m[35;1m)) {[0m
+    [90m269[0m[90m▕ [0m[35;1m                return [0m[39;1mfalse[0m[35;1m;[0m
+    [90m270[0m[90m▕ [0m[35;1m            }[0m
+    [90m271[0m[90m▕ [0m
+[31;1m  ➜ [0m[3;1m272[0m[90m▕ [0m[35;1m            [0m[39;1m$path [0m[35;1m= (new [0m[39;1mReflectionClass[0m[35;1m([0m[39;1m$route[0m[35;1m->[0m[39;1mgetControllerClass[0m[35;1m()))[0m
+    [90m273[0m[90m▕ [0m[35;1m                ->[0m[39;1mgetFileName[0m[35;1m();[0m
+    [90m274[0m[90m▕ [0m[35;1m        } else {[0m
+    [90m275[0m[90m▕ [0m[35;1m            return [0m[39;1mfalse[0m[35;1m;[0m
+    [90m276[0m[90m▕ [0m[35;1m        }[0m
+
+  1   vendor\laravel\framework\src\Illuminate\Foundation\Console\RouteListCommand.php:272
+      ReflectionClass::__construct("App\Http\Controllers\DispatchController")
+
+  2   vendor\laravel\framework\src\Illuminate\Foundation\Console\RouteListCommand.php:150
+      Illuminate\Foundation\Console\RouteListCommand::isVendorRoute(Object(Illuminate\Routing\Route))
+

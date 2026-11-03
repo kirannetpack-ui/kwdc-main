@@ -1,0 +1,20 @@
+[phases.setup]
+nixPkgs = [
+    "php82",
+    "php82Extensions.pdo_mysql",
+    "php82Extensions.pdo_pgsql",
+    "php82Extensions.pgsql",
+    "nodejs_20"
+]
+
+[phases.install]
+cmds = [
+    "composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev",
+    "npm ci"
+]
+
+[phases.build]
+cmds = ["npm run build"]
+
+[start]
+cmd = "bash scripts/deploy/start-production.sh"

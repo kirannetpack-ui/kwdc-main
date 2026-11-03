@@ -1,0 +1,69 @@
+version: "1"
+
+services:
+  - type: web
+    name: kwdc-web
+    runtime: docker
+    plan: free
+    region: oregon
+    dockerfilePath: ./dockerfile
+    dockerContext: .
+    dockerCommand: bash scripts/deploy/start-production.sh
+    healthCheckPath: /ping
+    autoDeployTrigger: commit
+    envVars:
+      - key: APP_NAME
+        value: KTM Warehouse & Distribution Center
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: PHASE_ONE_DEMO
+        value: "true"
+      - key: SEED_PORTAL_ACCOUNTS
+        value: "true"
+      - key: APP_KEY
+        sync: false
+      - key: APP_URL
+        sync: false
+      - key: LOG_CHANNEL
+        value: stderr
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DATABASE_URL
+        fromDatabase:
+          name: kwdc-database
+          property: connectionString
+      - key: SESSION_DRIVER
+        value: database
+      - key: SESSION_ENCRYPT
+        value: "true"
+      - key: SESSION_SECURE_COOKIE
+        value: "true"
+      - key: SESSION_HTTP_ONLY
+        value: "true"
+      - key: SESSION_SAME_SITE
+        value: lax
+      - key: CACHE_STORE
+        value: database
+      - key: QUEUE_CONNECTION
+        value: sync
+      - key: MAIL_MAILER
+        value: log
+      - key: AI_PROVIDER
+        value: gemini
+      - key: GEMINI_MODEL
+        value: gemini-3.5-flash
+      - key: GEMINI_API_KEY
+        sync: false
+
+databases:
+  - name: kwdc-database
+    databaseName: kwdc_database
+    user: kwdc_database_user
+    plan: free
+    region: oregon
+    ipAllowList:
+      - source: 0.0.0.0/0
+        description: everywhere
+    postgresMajorVersion: "16"

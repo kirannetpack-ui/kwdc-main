@@ -1,0 +1,14 @@
+.git
+.agents
+.openai
+.vercel-static
+.env*
+node_modules
+vendor
+dist
+tests
+docs
+storage
+bootstrap/cache/*.php
+*.docx
+generate_credentials_docx.py

@@ -1,0 +1,337 @@
+/* ==========================================================================
+   KTM-WDC Auth Shell - Claude-Inspired Warm & Editorial Aesthetic
+   ========================================================================== */
+
+:root {
+    --claude-bg: #FAF8F5;
+    --claude-surface: #FFFFFF;
+    --claude-border: #E8E2D8;
+    --claude-border-subtle: #F0EAE1;
+    --claude-border-strong: #D6CCC0;
+    --claude-text-primary: #24201D;
+    --claude-text-body: #57524C;
+    --claude-text-muted: #8A8379;
+    --claude-terracotta: #D96B43;
+    --claude-terracotta-hover: #C35832;
+    --claude-terracotta-soft: #FBF2ED;
+    --claude-terracotta-ring: rgba(217, 107, 67, 0.18);
+    --font-serif: 'Newsreader', Garamond, Georgia, serif;
+    --font-sans: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+body {
+    background-color: var(--claude-bg) !important;
+    background-image: 
+        radial-gradient(circle at 10% 8%, rgba(217, 107, 67, 0.04) 0%, transparent 35%),
+        radial-gradient(circle at 90% 12%, rgba(184, 115, 42, 0.03) 0%, transparent 40%) !important;
+    color: var(--claude-text-primary) !important;
+    font-family: var(--font-sans) !important;
+    margin: 0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.auth-shell, .guest-wrap, .register-shell {
+    display: flex !important;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 28px !important;
+    width: min(100% - 36px, 720px) !important;
+    min-height: 100svh;
+    padding: 48px 0 64px !important;
+    margin: 0 auto;
+}
+
+.brand-side, .brand-panel {
+    width: 100%;
+    text-align: center;
+    padding: 0 !important;
+}
+
+.brand-side .brand, .brand-panel .brand {
+    color: var(--claude-text-primary) !important;
+    font-family: var(--font-serif) !important;
+    font-size: 24px;
+    font-weight: 600;
+    margin: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    letter-spacing: -0.01em;
+}
+
+.brand-mark, .brand-icon {
+    background: linear-gradient(135deg, var(--claude-terracotta) 0%, var(--claude-terracotta-hover) 100%) !important;
+    color: #FFFFFF !important;
+    box-shadow: 0 4px 14px rgba(217, 107, 67, 0.28) !important;
+    border-radius: 14px !important;
+    width: 44px !important;
+    height: 44px !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+}
+
+.auth-card, .guest-card, .register-card {
+    width: 100%;
+    max-width: 480px;
+    padding: 40px !important;
+    background: #FFFFFF !important;
+    border: 1px solid var(--claude-border) !important;
+    border-radius: 24px !important;
+    box-shadow: 0 8px 30px -4px rgba(60, 45, 30, 0.06), 0 2px 6px -1px rgba(60, 45, 30, 0.03) !important;
+}
+
+.register-card {
+    max-width: 680px;
+}
+
+.card-head {
+    margin-bottom: 28px !important;
+}
+
+.card-head h2, .activation-head h1 {
+    font-family: var(--font-serif) !important;
+    font-size: 30px !important;
+    line-height: 1.2 !important;
+    color: var(--claude-text-primary) !important;
+    font-weight: 600 !important;
+    margin: 0 0 10px;
+    letter-spacing: -0.015em;
+}
+
+.card-head p, .activation-head p {
+    font-size: 14.5px !important;
+    color: var(--claude-text-body) !important;
+    line-height: 1.6;
+}
+
+.form-group {
+    margin-bottom: 20px !important;
+}
+
+.form-row {
+    gap: 20px !important;
+}
+
+.form-group label, .guest-card label {
+    font-size: 13px;
+    font-weight: 600 !important;
+    margin-bottom: 7px !important;
+    color: var(--claude-text-primary) !important;
+}
+
+.form-group input:not([type=checkbox]):not([type=radio]),
+.form-group select,
+.guest-card input:not([type=checkbox]):not([type=radio]) {
+    min-height: 48px;
+    border: 1px solid var(--claude-border) !important;
+    background: #FFFFFF !important;
+    border-radius: 12px !important;
+    color: var(--claude-text-primary);
+    font-size: 14px;
+    padding: 10px 14px;
+    transition: all 0.16s ease;
+    box-shadow: 0 1px 2px rgba(60, 45, 30, 0.02);
+}
+
+.input-wrap input {
+    padding-left: 42px !important;
+}
+
+.input-wrap i {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--claude-text-muted);
+    font-size: 14px;
+    pointer-events: none;
+    z-index: 2;
+}
+
+input[type="checkbox"] {
+    accent-color: var(--claude-terracotta) !important;
+    border-radius: 4px;
+}
+
+.form-group input:focus,
+.guest-card input:focus {
+    outline: none !important;
+    border-color: var(--claude-terracotta) !important;
+    box-shadow: 0 0 0 3.5px var(--claude-terracotta-ring) !important;
+}
+
+.input-wrap {
+    position: relative;
+}
+
+.input-wrap input[type=password],
+.input-wrap input[autocomplete=current-password] {
+    padding-right: 50px;
+}
+
+.password-toggle {
+    position: absolute;
+    right: 4px;
+    top: 4px;
+    width: 40px;
+    height: 40px;
+    border: 0;
+    background: transparent;
+    color: var(--claude-text-muted);
+    cursor: pointer;
+    border-radius: 10px;
+    transition: color 0.15s ease;
+}
+
+.password-toggle:hover {
+    color: var(--claude-text-primary);
+}
+
+.password-toggle i {
+    position: static !important;
+    transform: none !important;
+}
+
+.btn-auth, .btn-register, .guest-card button[type=submit] {
+    background: var(--claude-terracotta) !important;
+    border: 1px solid var(--claude-terracotta-hover) !important;
+    color: #FFFFFF !important;
+    font-weight: 600 !important;
+    box-shadow: 0 4px 14px rgba(217, 107, 67, 0.28) !important;
+    border-radius: 9999px !important;
+    min-height: 48px;
+    cursor: pointer;
+    font-size: 14.5px;
+    transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    width: 100%;
+}
+
+.btn-auth:hover, .btn-register:hover, .guest-card button[type=submit]:hover {
+    background: var(--claude-terracotta-hover) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(217, 107, 67, 0.36) !important;
+}
+
+.btn-auth:active, .btn-register:active, .guest-card button[type=submit]:active {
+    transform: scale(0.98) !important;
+}
+
+.guest-card button.resend-button {
+    color: var(--claude-terracotta) !important;
+    background: var(--claude-terracotta-soft) !important;
+    border: 1px solid var(--claude-border) !important;
+}
+
+.guest-card .activation-actions {
+    gap: 14px;
+    margin-top: 24px;
+}
+
+.role-grid {
+    gap: 12px !important;
+}
+
+.role-option {
+    border-radius: 16px !important;
+    border: 1px solid var(--claude-border) !important;
+    background: #FFFFFF !important;
+    padding: 16px 14px !important;
+    box-shadow: 0 1px 3px rgba(60, 45, 30, 0.02) !important;
+    transition: all 0.16s ease !important;
+}
+
+.role-option:hover {
+    border-color: var(--claude-border-strong) !important;
+    background: var(--claude-bg) !important;
+}
+
+.role-option.selected {
+    background: var(--claude-terracotta-soft) !important;
+    border-color: var(--claude-terracotta) !important;
+    box-shadow: 0 0 0 2px var(--claude-terracotta) !important;
+}
+
+.role-option > i {
+    background: #FFFFFF !important;
+    color: var(--claude-terracotta) !important;
+    border: 1px solid var(--claude-border) !important;
+}
+
+.role-option strong, .role-option h4 {
+    font-size: 13.5px !important;
+    color: var(--claude-text-primary);
+}
+
+.helper-text {
+    color: var(--claude-text-muted);
+    font-size: 12px;
+}
+
+.switch-link {
+    font-weight: 500 !important;
+    font-size: 13.5px;
+    color: var(--claude-text-body);
+    margin-top: 24px;
+    text-align: center;
+}
+
+.switch-link a {
+    color: var(--claude-terracotta);
+    font-weight: 600;
+}
+
+.switch-link a:hover {
+    color: var(--claude-terracotta-hover);
+    text-decoration: underline;
+}
+
+.form-options a {
+    color: var(--claude-terracotta) !important;
+    font-weight: 600 !important;
+}
+
+.form-options a:hover {
+    color: var(--claude-terracotta-hover) !important;
+    text-decoration: underline !important;
+}
+
+.error-box, .notice {
+    border-radius: 14px;
+    font-size: 13.5px;
+    line-height: 1.5;
+    padding: 12px 16px;
+    background: var(--claude-terracotta-soft);
+    border: 1px solid #F3D5C7;
+    color: #9E3527;
+}
+
+a:focus-visible, button:focus-visible, input[type=radio]:focus-visible + * {
+    outline: 3px solid var(--claude-terracotta);
+    outline-offset: 3px;
+}
+
+@media (max-width: 600px) {
+    .auth-shell, .guest-wrap, .register-shell {
+        padding-block: 28px 40px !important;
+        gap: 22px !important;
+    }
+    .auth-card, .guest-card, .register-card {
+        padding: 28px 22px !important;
+        border-radius: 20px !important;
+    }
+    .form-row {
+        grid-template-columns: 1fr !important;
+        gap: 0 !important;
+    }
+    .role-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+    .card-head h2, .activation-head h1 {
+        font-size: 26px !important;
+    }
+}
