@@ -10,6 +10,16 @@ if (! getenv('DATABASE_URL')) {
     exit(1);
 }
 
+// Schema changes use Neon's direct connection rather than its transaction pool.
+if ($directUrl = getenv('DATABASE_URL_UNPOOLED')) {
+    putenv('DATABASE_URL='.$directUrl);
+    $_ENV['DATABASE_URL'] = $directUrl;
+    $_SERVER['DATABASE_URL'] = $directUrl;
+    putenv('DB_POOLED=false');
+    $_ENV['DB_POOLED'] = 'false';
+    $_SERVER['DB_POOLED'] = 'false';
+}
+
 foreach (['bootstrap/cache', 'storage/framework/views', 'storage/framework/cache/data', 'storage/logs'] as $path) {
     $directory = __DIR__.'/../../'.$path;
     if (! is_dir($directory)) {

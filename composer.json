@@ -41,6 +41,7 @@
     },
     "scripts": {
         "vercel": [
+            "Composer\\Config::disableProcessTimeout",
             "@php scripts/deploy/vercel-build.php"
         ],
         "post-autoload-dump": [
