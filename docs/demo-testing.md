@@ -17,7 +17,7 @@ This is a shared public demo. Records are fictional and changes are visible to a
 
 ## Deliberate evaluation limits
 
-- Real payment initiation and callbacks are blocked. The payment page displays sample invoices without bank transfer instructions or merchant QR codes. Its **Simulate bank transfer** button records a pending fictional transaction. An administrator can approve or reject it under **Bank / QR Transfers**, allowing reconciliation to be evaluated without moving money.
+- Real payment initiation and callbacks are blocked. At `/payment`, a client can **Create sample unpaid invoice**, then **Simulate bank transfer** to record a pending fictional transaction. An administrator can approve or reject it under **Bank / QR Transfers**, allowing reconciliation to be evaluated without moving money. No real bank details or merchant QR codes are displayed.
 - Email uses an in-memory mailer; SMS uses the logging driver. Outgoing delivery is not tested or enabled.
 - Registration and password recovery are blocked. Use the supplied sample accounts.
 - Uploads are blocked until durable public/private file storage is configured.

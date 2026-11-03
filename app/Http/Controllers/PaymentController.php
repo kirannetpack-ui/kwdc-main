@@ -458,6 +458,25 @@ class PaymentController extends Controller
         return view('payment.history', compact('transactions'));
     }
 
+    public function demoInvoice()
+    {
+        abort_unless(config('kwdc.demo'), 404);
+        abort_unless(auth()->user()->role === 'client', 403);
+        $warehouseRequest = \App\Models\WarehouseRequest::where('client_id', auth()->id())->first();
+        Invoice::create([
+            'invoice_number' => 'INV-DEMO-'.\Illuminate\Support\Str::uuid(),
+            'user_id' => auth()->id(), 'client_id' => auth()->id(),
+            'warehouse_request_id' => $warehouseRequest?->id,
+            'amount' => 1000, 'subtotal' => 1000, 'grand_total' => 1000,
+            'tax_rate' => 0, 'tax_amount' => 0,
+            'status' => 'pending', 'payment_status' => 'unpaid',
+            'due_date' => now()->addDays(7),
+            'notes' => 'DEMO ONLY — fictional invoice for workflow testing. No money is owed.',
+        ]);
+
+        return redirect()->route('payment.index')->with('success', 'Sample unpaid invoice created. No money is owed.');
+    }
+
     public function demoTransfer(Request $request)
     {
         abort_unless(config('kwdc.demo'), 404);

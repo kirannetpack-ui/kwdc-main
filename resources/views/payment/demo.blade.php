@@ -6,6 +6,9 @@
     <h2>Sample invoices</h2>
     <p>This demo does not accept money. Bank details and merchant QR codes will be added after the business account is ready.</p>
     <a href="{{ route('payment.history') }}">View sample payment history</a>
+    @if(auth()->user()->role === 'client')
+        <form method="POST" action="{{ route('payment.demo.invoice') }}" class="my-3">@csrf<button class="btn btn-outline-secondary" type="submit">Create sample unpaid invoice</button></form>
+    @endif
     <p>To test reconciliation, record a simulated transfer below, then sign in as administrator and open Bank / QR Transfers to approve or reject it. No real money is involved.</p>
     <table class="table mt-4"><thead><tr><th>Invoice</th><th>Amount (NPR)</th><th>Status</th><th>Try the workflow</th></tr></thead><tbody>
     @forelse($invoices as $invoice)

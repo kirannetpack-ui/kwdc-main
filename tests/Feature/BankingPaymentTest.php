@@ -122,6 +122,16 @@ class BankingPaymentTest extends TestCase
         \Illuminate\Support\Facades\Http::assertNothingSent();
     }
 
+    public function test_client_can_create_a_fictional_invoice_only_in_demo_mode(): void
+    {
+        config(['kwdc.demo' => true]);
+        $this->actingAs($this->client)->post(route('payment.demo.invoice'))->assertRedirect(route('payment.index'));
+        $this->assertDatabaseHas('invoices', ['client_id' => $this->client->id, 'amount' => 1000, 'payment_status' => 'unpaid']);
+        $this->actingAs($this->admin)->post(route('payment.demo.invoice'))->assertForbidden();
+        config(['kwdc.demo' => false]);
+        $this->actingAs($this->client)->post(route('payment.demo.invoice'))->assertNotFound();
+    }
+
     public function test_client_can_submit_banking_qr_payment(): void
     {
         $response = $this->actingAs($this->client)->post(route('payment.banking-qr.submit'), [
