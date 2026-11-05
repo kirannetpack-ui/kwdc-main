@@ -67,4 +67,15 @@ public function incidents()
             'id'
         );
     }
+
+    public function authorizedWarehouses()
+    {
+        return $this->belongsToMany(Warehouse::class);
+    }
+
+    public function serviceableWarehouses()
+    {
+        return Warehouse::where('status', 'approved')
+            ->whereIn('id', $this->authorizedWarehouses()->select('warehouses.id'));
+    }
 }

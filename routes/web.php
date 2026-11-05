@@ -100,7 +100,9 @@ Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['au
 // ================================================================
 // 3. PROTECTED PLATFORM ROUTES (Authentication required)
 // ================================================================
-Route::middleware(['auth', 'account.ready'])->group(function () {
+Route::middleware(['auth', 'account.ready', \App\Http\Middleware\HydrateDirectUploads::class])->group(function () {
+    Route::post('/uploads/stage', \App\Http\Controllers\DirectUploadController::class)
+        ->middleware('throttle:40,1')->name('uploads.stage');
     Route::get('/maps/search', [\App\Http\Controllers\MapController::class, 'search'])->middleware('throttle:60,1')->name('maps.search');
     Route::get('/maps/reverse', [\App\Http\Controllers\MapController::class, 'reverse'])->middleware('throttle:60,1')->name('maps.reverse');
     Route::post('/maps/route', [\App\Http\Controllers\MapController::class, 'route'])->middleware('throttle:30,1')->name('maps.route');
@@ -140,6 +142,8 @@ Route::middleware(['auth', 'account.ready'])->group(function () {
     // ==================== REMINDERS & WAREHOUSE REQUEST DECISION ====================
     Route::get('/warehouse-requests/{id}', [\App\Http\Controllers\WarehouseRequestDetailController::class, 'show'])->name('warehouse-requests.show');
     Route::post('/warehouse-requests/{id}/decision', [\App\Http\Controllers\WarehouseRequestDetailController::class, 'decide'])->name('warehouse-requests.decide');
+    Route::post('/warehouse-requests/{id}/move-out', [\App\Http\Controllers\WarehouseRequestDetailController::class, 'confirmMoveOut'])->name('warehouse-requests.move-out');
+    Route::post('/warehouse-requests/{id}/reserve', [\App\Http\Controllers\WarehouseRequestDetailController::class, 'reserve'])->name('warehouse-requests.reserve');
     Route::resource('reminders', ReminderController::class)->only(['index', 'store', 'update', 'destroy']);
 
     // ==================== TRACKING ====================
@@ -149,8 +153,8 @@ Route::middleware(['auth', 'account.ready'])->group(function () {
         Route::get('/outgoing', [TrackingController::class, 'outgoing'])->name('outgoing');
         Route::get('/pickups', [TrackingController::class, 'pickups'])->name('pickups');
         Route::get('/shipment/{id}', [TrackingController::class, 'trackShipment'])->name('shipment');
-        Route::post('/location/{id}', [TrackingController::class, 'updateLocation'])->name('location');
-        Route::post('/status/{id}', [TrackingController::class, 'updateStatus'])->name('status');
+        Route::post('/location/{id}', [DispatchController::class, 'updateLocation'])->name('location');
+        Route::post('/status/{id}', [DispatchController::class, 'updateStatus'])->name('status');
     });
 
     // ==================== WAREHOUSES (Shared) ====================
@@ -191,6 +195,7 @@ Route::middleware(['auth', 'account.ready'])->group(function () {
         Route::get('/{id}', [DispatchController::class, 'show'])->name('show');
         Route::post('/calculate-price', [DispatchController::class, 'calculatePriceAjax'])->name('calculate-price');
         Route::get('/{id}/track', [DispatchController::class, 'track'])->name('track');
+        Route::get('/{id}/tracking-position', [DispatchController::class, 'trackingPosition'])->name('tracking-position');
         Route::post('/{id}/status', [DispatchController::class, 'updateStatus'])->name('update-status');
         Route::post('/{id}/rate', [DispatchController::class, 'rate'])->name('rate');
         Route::post('/{id}/enable-tracking', [DispatchController::class, 'enableTracking'])->name('enable-tracking');

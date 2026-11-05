@@ -83,7 +83,7 @@ document.getElementById('ai-warehouse-search').addEventListener('submit', async 
         @foreach($warehouses as $warehouse)
         <div class="border rounded-lg p-4 hover:shadow-lg transition">
             @if($warehouse->front_photo)
-            <img src="{{ Storage::url($warehouse->front_photo) }}" alt="{{ $warehouse->name }}" class="w-full h-40 object-cover rounded-lg mb-3">
+            <img src="{{ Storage::disk('public')->url($warehouse->front_photo) }}" alt="{{ $warehouse->name }}" class="w-full h-40 object-cover rounded-lg mb-3">
             @else
             <div class="w-full h-40 bg-gray-200 rounded-lg mb-3 flex items-center justify-center">
                 <i class="fas fa-warehouse text-4xl text-gray-400"></i>

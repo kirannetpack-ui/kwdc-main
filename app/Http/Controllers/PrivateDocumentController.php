@@ -11,7 +11,6 @@ use App\Models\Equipment;
 use App\Models\Vehicle;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\Response;
 
 class PrivateDocumentController extends Controller
@@ -22,9 +21,7 @@ class PrivateDocumentController extends Controller
 
         $user = $request->user();
         abort_unless($user && $this->canAccess($user, $path), Response::HTTP_FORBIDDEN);
-        abort_unless(Storage::disk('private_uploads')->exists($path), Response::HTTP_NOT_FOUND);
-
-        return Storage::disk('private_uploads')->response($path);
+        return app(\App\Services\PrivateFileResponse::class)->send($path, inline: true);
     }
 
     private function canAccess($user, string $path): bool

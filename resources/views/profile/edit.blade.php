@@ -32,8 +32,8 @@
         <div class="kwdc-glass-card p-6 sm:p-8 flex flex-col sm:flex-row items-center gap-6">
             <div class="relative group">
                 <div class="w-24 h-24 rounded-3xl overflow-hidden bg-gradient-to-br from-orange-500 to-amber-600 text-white flex items-center justify-center font-extrabold text-3xl shadow-md border-2 border-white ring-4 ring-orange-500/10" id="avatarPreviewContainer">
-                    @if($user->profile_photo && file_exists(public_path($user->profile_photo)))
-                        <img src="{{ asset($user->profile_photo) }}" alt="{{ $user->name }}" class="w-full h-full object-cover" id="avatarPreviewImg">
+                    @if($user->profile_photo)
+                        <img src="{{ $user->profile_photo_url }}" alt="{{ $user->name }}" class="w-full h-full object-cover" id="avatarPreviewImg">
                     @else
                         <span id="avatarInitial">{{ strtoupper(substr($user->name, 0, 1)) }}</span>
                         <img src="" alt="Preview" class="w-full h-full object-cover hidden" id="avatarPreviewImg">

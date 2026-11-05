@@ -27,39 +27,15 @@ return [
         'currency' => env('STRIPE_CURRENCY', 'npr'),
     ],
     'banking' => [
-        'company_name' => 'Kathmandu Warehousing & Distribution Center Pvt. Ltd.',
-        'company_pan' => '609823412',
-        'accounts' => [
-            [
-                'id' => 'nabil',
-                'bank_name' => 'Nabil Bank Ltd.',
-                'account_name' => 'Kathmandu Warehousing & Distribution Center Pvt. Ltd.',
-                'account_number' => '01100175023910',
-                'branch' => 'Kathmandu Main / Durbar Marg',
-                'swift_code' => 'NARBNPKA',
-            ],
-            [
-                'id' => 'global_ime',
-                'bank_name' => 'Global IME Bank Ltd.',
-                'account_name' => 'KTM-WDC Logistics & Cargo Hub',
-                'account_number' => '00101010045623',
-                'branch' => 'New Road / Birgunj Terminal',
-                'swift_code' => 'GLBLNPKA',
-            ],
-            [
-                'id' => 'nic_asia',
-                'bank_name' => 'NIC Asia Bank Ltd.',
-                'account_name' => 'KTM-WDC Logistics Nepal',
-                'account_number' => '109200548123901',
-                'branch' => 'Thamel Corporate Branch',
-                'swift_code' => 'NICAIPKA',
-            ],
-        ],
+        'accounts' => env('BANK_TRANSFER_ENABLED', false) && env('BANK_NAME') && env('BANK_ACCOUNT_HOLDER') && env('BANK_ACCOUNT_NUMBER') ? [[
+            'bank_name' => env('BANK_NAME'),
+            'account_name' => env('BANK_ACCOUNT_HOLDER'),
+            'account_number' => env('BANK_ACCOUNT_NUMBER'),
+            'branch' => env('BANK_BRANCH'),
+        ]] : [],
         'qr' => [
-            'merchant_name' => 'KTM-WDC LOGISTICS PVT LTD',
-            'merchant_pan' => '609823412',
-            'terminal_id' => 'KTM-WDC-01',
-            'networks' => ['Fonepay', 'NepalPay', 'connectIPS', 'SmartQR'],
+            'image_url' => env('BANK_QR_ENABLED', false) && env('BANK_QR_MERCHANT_NAME') ? env('BANK_QR_IMAGE_URL') : null,
+            'merchant_name' => env('BANK_QR_MERCHANT_NAME'),
         ],
     ],
 ];

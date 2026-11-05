@@ -205,7 +205,7 @@ class Proposal extends Model
     public function isExpired()
     {
         return $this->status === 'expired' || 
-               ($this->valid_until && $this->valid_until->isPast() && in_array($this->status, ['pending', 'negotiating']));
+               ($this->valid_until && $this->valid_until->lessThanOrEqualTo(now()) && in_array($this->status, ['pending', 'negotiating']));
     }
 
     public function markAsExpired()

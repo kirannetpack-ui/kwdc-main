@@ -32,6 +32,15 @@
     </section>
 </div>
 
+@if($request->quoted_price)
+    <p class="mt-4">Equipment quote: NPR {{ number_format($request->quoted_price, 2) }}</p>
+    @if($request->client_id === auth()->id() && $request->status === 'pending')
+        <form method="POST" action="{{ route('equipment-requests.accept-quote', $request) }}">
+            @csrf
+            <button class="btn btn-primary" type="submit">Accept quote and issue invoice</button>
+        </form>
+    @endif
+@endif
 @if($request->client_id === auth()->id() && $request->status === 'pending')
 <form class="mt-6" method="POST" action="{{ route('equipment-requests.destroy', $request) }}">@csrf @method('DELETE')<button class="btn btn-outline-danger" type="submit">Cancel request</button></form>
 @endif
@@ -53,7 +62,8 @@
                 </select>
                 @error('assigned_equipment_id')<p class="text-sm text-red-600">{{ $message }}</p>@enderror
                 <div class="flex flex-wrap gap-3">
-                    <button type="submit" class="btn btn-primary">Approve</button>
+                    <label>Quote total (NPR) <input type="number" min="0.01" step="0.01" name="quoted_price" required></label>
+                    <button type="submit" class="btn btn-primary">Send quote</button>
                     <button type="submit" formaction="{{ route('equipment-requests.reject', $request) }}" formnovalidate class="btn btn-outline-danger">Reject</button>
                 </div>
             </form>

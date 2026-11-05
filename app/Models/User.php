@@ -114,6 +114,17 @@ class User extends Authenticatable
     /**
      * Check if user is banned
      */
+    public function getProfilePhotoUrlAttribute(): ?string
+    {
+        if (! $this->profile_photo) {
+            return null;
+        }
+
+        return str_starts_with($this->profile_photo, 'uploads/avatars/')
+            ? asset($this->profile_photo)
+            : \Illuminate\Support\Facades\Storage::disk('public')->url($this->profile_photo);
+    }
+
     public function isBanned(): bool
     {
         return (bool) $this->is_banned;

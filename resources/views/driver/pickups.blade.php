@@ -109,6 +109,10 @@
                                     @csrf
                                     <button type="submit" class="px-2 py-0.5 rounded-md bg-orange-500 hover:bg-orange-600 text-white font-semibold text-[10.5px] transition shadow-2xs">Accept</button>
                                 </form>
+                        <form action="{{ route('driver.reject-pickup', $pickup->id) }}" method="POST" class="inline">
+                            @csrf
+                            <button type="submit" class="px-2 py-1 text-xs font-semibold">Decline</button>
+                        </form>
                             </td>
                         </tr>
                         @endforeach

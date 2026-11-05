@@ -74,7 +74,7 @@
                         <i class="fas fa-satellite-dish text-orange-500"></i> Real-Time Vehicle Position
                     </h2>
                     <span id="lastUpdated" class="text-xs text-slate-500">
-                        <i class="far fa-clock text-slate-400 mr-1"></i> Live Active Stream
+                        <i class="far fa-clock text-slate-400 mr-1"></i> Waiting for driver location
                     </span>
                 </div>
 
@@ -82,7 +82,7 @@
 
                 <div class="flex items-center justify-between text-xs text-slate-500 pt-1">
                     <span><i class="fas fa-route text-orange-500 mr-1"></i> Transit Route: Kathmandu &bull; Central Highway Corridor</span>
-                    <span>Accurate GPS Coordinates Active</span>
+                    <span>Updates when the driver shares location</span>
                 </div>
             </div>
 
@@ -131,7 +131,7 @@
                     </div>
                     <div>
                         <div class="font-bold text-slate-900">{{ optional($dispatch->driver)->name ?? 'Assigned Logistics Driver' }}</div>
-                        <div class="text-xs text-slate-500">{{ optional($dispatch->driver)->phone ?? '+977-9841000000' }}</div>
+                        <div class="text-xs text-slate-500">{{ optional($dispatch->driver)->phone ?? 'Phone unavailable' }}</div>
                     </div>
                 </div>
 
@@ -146,7 +146,7 @@
                     </div>
                     <div class="flex justify-between py-1">
                         <span class="text-slate-400 font-medium">Payment Settlement</span>
-                        <span class="font-bold uppercase text-emerald-600">{{ $dispatch->payment_status ?? 'Settled' }}</span>
+                        <span class="font-bold uppercase text-emerald-600">{{ $dispatch->payment_status ?? 'Unconfirmed' }}</span>
                     </div>
                 </div>
             </div>
@@ -178,13 +178,10 @@
             return;
         }
 
-        if (mapEl._leaflet_id) {
-            mapEl._leaflet_id = null;
-            mapEl.innerHTML = '';
-        }
+        if (mapEl._leaflet_map) return;
 
-        const lat = {{ $dispatch->current_latitude ?? 27.7172 }};
-        const lng = {{ $dispatch->current_longitude ?? 85.3240 }};
+        const lat = 27.7172;
+        const lng = 85.3240;
 
         const map = L.map(mapEl, {
             zoomControl: true,
@@ -204,9 +201,44 @@
             iconAnchor: [11, 11]
         });
 
-        L.marker([lat, lng], { icon: vehicleIcon }).addTo(map)
-            .bindPopup('<b>Driver Live Position</b><br>Active Route Tracking')
-            .openPopup();
+        let marker;
+        const lastUpdated = document.getElementById('lastUpdated');
+        @php($positionUrl = route('dispatch.tracking-position', array_filter(['id' => $dispatch->id, 'token' => request()->query('token')]), false))
+        const positionUrl = @json($positionUrl);
+
+        async function refreshPosition() {
+            if (!mapEl.isConnected) return;
+            try {
+                const response = await fetch(positionUrl, { headers: { Accept: 'application/json' } });
+                if ([401, 403, 404].includes(response.status)) {
+                    if (marker) marker.remove();
+                    lastUpdated.textContent = 'Tracking unavailable';
+                    return;
+                }
+                if (!response.ok) throw new Error('Position request failed');
+                const position = await response.json();
+                if (!position.active) {
+                    if (marker) marker.remove();
+                    lastUpdated.textContent = 'Tracking is inactive';
+                    return;
+                }
+                if (position.latitude !== null && position.longitude !== null) {
+                    const coordinates = [Number(position.latitude), Number(position.longitude)];
+                    if (marker) {
+                        marker.setLatLng(coordinates);
+                    } else {
+                        marker = L.marker(coordinates, { icon: vehicleIcon }).addTo(map);
+                        map.setView(coordinates, 13);
+                    }
+                    lastUpdated.textContent = 'Last location received at ' + new Date(position.updated_at).toLocaleTimeString();
+                }
+            } catch {
+                lastUpdated.textContent = 'Location temporarily unavailable';
+            }
+            setTimeout(refreshPosition, 15000);
+        }
+
+        refreshPosition();
 
         const resize = () => { map.invalidateSize(); };
         setTimeout(resize, 80);

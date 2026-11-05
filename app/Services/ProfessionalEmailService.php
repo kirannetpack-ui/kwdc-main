@@ -26,7 +26,7 @@ class ProfessionalEmailService
                     'id' => $dispatch->id,
                     'token' => $dispatch->tracking_token,
                 ]),
-                'support_phone' => config('app.support_phone', '01-5551234'),
+                'support_phone' => config('company.phone'),
                 'company_logo' => config('app.logo_url'),
             ], function ($message) use ($recipient, $pdf, $dispatch) {
                 $message->to($recipient['email'], $recipient['name'])
@@ -43,14 +43,7 @@ class ProfessionalEmailService
         $data = [
             'dispatch' => $dispatch,
             'stops' => $dispatch->stops,
-            'company' => [
-                'name' => 'KTM Warehouse & Distribution Center',
-                'pan' => '123456789',
-                'address' => 'Kathmandu, Nepal',
-                'phone' => '01-5551234',
-                'email' => 'info@ktmwdc.com',
-                'website' => 'www.ktmwdc.com'
-            ],
+            'company' => config('company'),
             'generated_date' => now()->format('F d, Y H:i')
         ];
         

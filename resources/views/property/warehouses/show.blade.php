@@ -198,19 +198,19 @@
                     @if($warehouse->front_image)
                         <div class="mb-2">
                             <strong>Front View</strong>
-                            <img src="{{ asset('storage/' . $warehouse->front_image) }}" class="img-fluid rounded mt-1" alt="Front View">
+                            <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($warehouse->front_image) }}" class="img-fluid rounded mt-1" alt="Front View">
                         </div>
                     @endif
                     @if($warehouse->interior_image)
                         <div class="mb-2">
                             <strong>Interior View</strong>
-                            <img src="{{ asset('storage/' . $warehouse->interior_image) }}" class="img-fluid rounded mt-1" alt="Interior View">
+                            <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($warehouse->interior_image) }}" class="img-fluid rounded mt-1" alt="Interior View">
                         </div>
                     @endif
                     @if($warehouse->exterior_image)
                         <div class="mb-2">
                             <strong>Exterior View</strong>
-                            <img src="{{ asset('storage/' . $warehouse->exterior_image) }}" class="img-fluid rounded mt-1" alt="Exterior View">
+                            <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($warehouse->exterior_image) }}" class="img-fluid rounded mt-1" alt="Exterior View">
                         </div>
                     @endif
                     @if(!$warehouse->front_image && !$warehouse->interior_image && !$warehouse->exterior_image)

@@ -2,5 +2,6 @@
 
 return [
     'demo' => (bool) env('PHASE_ONE_DEMO', false),
-    'launch_ready' => (bool) env('APP_LAUNCH_READY', true),
+    'serverless' => (bool) env('VERCEL', false),
+    'launch_ready' => filter_var(env('APP_LAUNCH_READY', ! env('VERCEL', false)), FILTER_VALIDATE_BOOLEAN),
 ];

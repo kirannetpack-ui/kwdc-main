@@ -23,7 +23,11 @@ class InvoiceGenerated extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: "Monthly Invoice #{$this->invoice->id}",
+            subject: match ($this->invoice->order_type) {
+                'dispatch' => "Delivery invoice {$this->invoice->invoice_number}",
+                'equipment' => "Equipment invoice {$this->invoice->invoice_number}",
+                default => "Warehouse invoice {$this->invoice->invoice_number}",
+            },
         );
     }
 

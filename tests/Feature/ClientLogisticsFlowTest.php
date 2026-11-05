@@ -96,6 +96,7 @@ class ClientLogisticsFlowTest extends TestCase
         ]);
         $warehouse = Warehouse::factory()->create([
             'status' => 'approved',
+            'area_sqft' => 500,
         ]);
 
         $response = $this->actingAs($client)->post(route('my-requests.store'), [
@@ -121,5 +122,104 @@ class ClientLogisticsFlowTest extends TestCase
         Storage::disk('private_uploads')->assertExists($request->packing_list_path);
         Storage::disk('private_uploads')->assertExists($request->insurance_path);
         Storage::disk('public')->assertMissing($request->invoice_path);
+    }
+
+    public function test_warehouse_renewal_priority_and_future_space_follow_the_agreement(): void
+    {
+        $this->travelTo(\Illuminate\Support\Carbon::parse('2026-11-30 09:00'));
+        \Illuminate\Support\Facades\Mail::fake();
+        $tenant = User::factory()->create(['role' => 'client']);
+        $applicant = User::factory()->create(['role' => 'client']);
+        $warehouse = Warehouse::factory()->create(['status' => 'approved', 'area_sqft' => 500]);
+        $agreement = \App\Models\WarehouseRequest::create([
+            'warehouse_id' => $warehouse->id,
+            'client_id' => $tenant->id,
+            'space_required' => 400,
+            'purpose' => 'Storage',
+            'status' => 'assigned',
+            'contract_end_date' => '2027-01-31',
+        ]);
+        $availability = app(\App\Services\WarehouseAvailability::class);
+        $moveIn = \Illuminate\Support\Carbon::parse('2027-02-01');
+
+        $this->artisan('warehouse:send-renewal-reminders')->assertSuccessful();
+        $this->artisan('warehouse:send-renewal-reminders')->assertSuccessful();
+        \Illuminate\Support\Facades\Mail::assertSent(\App\Mail\ContractExpiryReminder::class, 1);
+        $this->assertSame(100.0, $availability->snapshot($warehouse, $moveIn)['available']);
+        $this->actingAs($tenant)->get(route('my-requests.show', $agreement))->assertOk()->assertSee('Request renewal');
+        $this->actingAs($applicant)->post(route('my-requests.renewal', $agreement), ['decision' => 'renew'])->assertNotFound();
+
+        $this->travelTo(\Illuminate\Support\Carbon::parse('2026-12-31 09:00'));
+        $this->actingAs($tenant)->post(route('my-requests.renewal', $agreement), ['decision' => 'renew'])->assertConflict();
+        $this->assertSame(100.0, $availability->snapshot($warehouse)['available']);
+        $this->assertSame(500.0, $availability->snapshot($warehouse, $moveIn)['available']);
+        $this->actingAs($applicant)->get(route('my-requests.create'))->assertOk()->assertSee('open for pre-booking');
+        $this->post(route('my-requests.store'), [
+            'warehouse_id' => $warehouse->id,
+            'required_area' => 400,
+            'duration_months' => 2,
+            'purpose' => 'Future storage',
+            'preferred_start_date' => '2027-02-01',
+        ])->assertRedirect(route('my-requests.index'));
+        $this->assertDatabaseHas('warehouse_requests', ['client_id' => $applicant->id, 'status' => 'pending']);
+
+        $this->travelTo($moveIn);
+        $this->assertSame(100.0, $availability->snapshot($warehouse)['available']);
+        $this->post(route('warehouse-requests.move-out', $agreement), ['space_cleared' => 1])->assertForbidden();
+        $admin = User::factory()->create(['role' => 'admin', 'is_admin' => true]);
+        $this->actingAs($admin)->post(route('warehouse-requests.move-out', $agreement), ['space_cleared' => 1])->assertRedirect();
+        $this->assertSame(500.0, $availability->snapshot($warehouse)['available']);
+    }
+
+    public function test_warehouse_reservation_holds_capacity_and_activates_only_after_prepayment(): void
+    {
+        \Illuminate\Support\Facades\Mail::fake();
+        $admin = User::factory()->create(['role' => 'admin', 'is_admin' => true]);
+        $tenant = User::factory()->create(['role' => 'client']);
+        $warehouse = Warehouse::factory()->create(['status' => 'approved', 'area_sqft' => 500]);
+        $request = \App\Models\WarehouseRequest::create([
+            'warehouse_id' => $warehouse->id, 'client_id' => $tenant->id,
+            'space_required' => 400, 'purpose' => 'Storage', 'status' => 'pending',
+        ]);
+        $other = $request->replicate();
+        $other->save();
+        $terms = ['start_date' => today()->toDateString(), 'end_date' => today()->addMonth()->toDateString(), 'monthly_rent' => 1000];
+        $this->actingAs($admin)->post(route('warehouse-requests.reserve', $request), $terms)->assertRedirect();
+        $this->post(route('warehouse-requests.reserve', $other), $terms)->assertConflict();
+
+        $service = app(\App\Services\WarehouseReservations::class);
+        $service->activate($request->id);
+        $this->assertSame('reserved', $request->fresh()->status);
+        $request->invoice()->sole()->markAsPaid('bank_transfer');
+        $service->activate($request->id);
+        $this->assertSame('assigned', $request->fresh()->status);
+    }
+
+    public function test_paid_warehouse_renewal_extends_the_existing_agreement(): void
+    {
+        \Illuminate\Support\Facades\Mail::fake();
+        $admin = User::factory()->create(['role' => 'admin', 'is_admin' => true]);
+        $tenant = User::factory()->create(['role' => 'client']);
+        $warehouse = Warehouse::factory()->create(['status' => 'approved', 'area_sqft' => 500]);
+        $end = today()->addWeeks(6);
+        $start = $end->copy()->addDay();
+        $nextEnd = $start->copy()->addMonth();
+        $agreement = \App\Models\WarehouseRequest::create([
+            'warehouse_id' => $warehouse->id, 'client_id' => $tenant->id,
+            'space_required' => 400, 'purpose' => 'Storage', 'status' => 'assigned',
+            'contract_end_date' => $end,
+        ]);
+        $this->actingAs($tenant)->post(route('my-requests.renewal', $agreement), ['decision' => 'renew'])->assertRedirect();
+        $this->actingAs($admin)->post(route('warehouse-requests.reserve', $agreement), [
+            'renewal' => 1, 'start_date' => $start->toDateString(),
+            'end_date' => $nextEnd->toDateString(), 'monthly_rent' => 2000,
+        ])->assertRedirect();
+
+        $renewal = \App\Models\WarehouseRequest::where('renewal_of_id', $agreement->id)->sole();
+        $renewal->invoice()->sole()->markAsPaid('bank_transfer');
+        $this->travelTo($start);
+        app(\App\Services\WarehouseReservations::class)->activate($renewal->id);
+        $this->assertSame($nextEnd->toDateString(), $agreement->fresh()->agreementEnd()->toDateString());
+        $this->assertSame('completed', $renewal->fresh()->status);
     }
 }

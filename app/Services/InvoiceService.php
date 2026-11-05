@@ -52,7 +52,7 @@ class InvoiceService
             $subtotal = $subtotal ?: ($dispatch->grand_total ?: $dispatch->base_price ?: 0);
             $taxAmount = $subtotal * 0.13; // 13% VAT
             $grandTotal = $subtotal + $taxAmount;
-            $warehouseRequest = $this->warehouseRequestFor($dispatch);
+            $warehouseRequest = $dispatch->warehouse_request_id ? $dispatch->warehouseRequest : null;
             
             $invoice = Invoice::create([
                 'invoice_number' => Invoice::generateInvoiceNumber(),
@@ -60,7 +60,7 @@ class InvoiceService
                 'order_type' => 'dispatch',
                 'order_id' => $dispatch->id,
                 'client_id' => $dispatch->client_id,
-                'warehouse_request_id' => $warehouseRequest->id,
+                'warehouse_request_id' => $warehouseRequest?->id,
                 'amount' => $grandTotal,
                 'subtotal' => $subtotal,
                 'discount' => 0,
@@ -69,6 +69,7 @@ class InvoiceService
                 'grand_total' => $grandTotal,
                 'status' => 'pending',
                 'payment_status' => 'unpaid',
+                'payment_method' => $dispatch->payment_method,
                 'due_date' => now()->addDays(7),
                 'payment_due_date' => now()->addDays(7),
                 'billing_type' => $dispatch->bill_type ?? 'regular',
@@ -203,7 +204,7 @@ class InvoiceService
             ]);
             
             $pdfPath = 'invoices/pdfs/' . $invoice->invoice_number . '.pdf';
-            Storage::disk('public')->put($pdfPath, $pdf->output());
+            Storage::disk('private_uploads')->put($pdfPath, $pdf->output());
             
             return $pdfPath;
             
@@ -242,14 +243,7 @@ class InvoiceService
     // Get company details for invoice
     private function getCompanyDetails(): array
     {
-        return [
-            'name' => 'KTM Warehouse & Distribution Center',
-            'address' => 'Ring Road, Kathmandu, Nepal',
-            'phone' => '+977-1-5551234',
-            'email' => 'accounts@ktm-wdc.com',
-            'pan' => '123456789',
-            'logo' => asset('images/logo.png')
-        ];
+        return config('company') + ['logo' => asset('images/logo.png')];
     }
     
     // Download invoice

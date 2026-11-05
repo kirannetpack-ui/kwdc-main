@@ -140,14 +140,11 @@ The portal supports international cards, local digital wallets, direct commercia
 
 1. **Direct Commercial Bank Transfer (`payment.bank.submit`)**:
    - Pre-configured corporate depository accounts for Nepal's leading A-Class commercial banks:
-     - **Nabil Bank Ltd.** (`01100175023910` / Maitighar Corporate Branch)
-     - **Global IME Bank Ltd.** (`00101010045623` / Kamaladi Corporate Branch)
-     - **NIC Asia Bank Ltd.** (`109200548123901` / Thapathali Branch)
+     - The payment screen displays the verified account configured by the operator when bank transfers are enabled.
    - Interactive Apple-style modal with 1-click clipboard copy for Account Numbers and Account Names.
    - Bank voucher / deposit slip photo and PDF upload (`payment-vouchers` storage) with UTR / Reference tracking.
 2. **Interbank Banking QR Payment (`payment.banking-qr.submit`)**:
-   - Universal dynamic QR stand compatible with **Fonepay**, **NepalPay**, **connectIPS**, and all 20+ Nepal commercial and development mobile banking applications.
-   - Registered Merchant Name: `KTM-WDC LOGISTICS PVT LTD`, Inland Revenue Department PAN `609823412`.
+   - The payment screen displays the bank-issued merchant QR configured by the operator when QR payments are enabled.
    - Fast RRN (Retrieval Reference Number) entry and instant admin reconciliation workflow.
 3. **Stripe Checkout (`payment.stripe.init`)**:
    - Supports Visa, MasterCard, American Express, Apple Pay, and Google Pay.

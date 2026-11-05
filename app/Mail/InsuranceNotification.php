@@ -26,10 +26,10 @@ class InsuranceNotification extends Mailable
 
         // Attach invoice and packing list if they exist
         if ($this->request->invoice_path && Storage::disk('private_uploads')->exists($this->request->invoice_path)) {
-            $mail->attach(Storage::disk('private_uploads')->path($this->request->invoice_path));
+            $mail->attachFromStorageDisk('private_uploads', $this->request->invoice_path);
         }
         if ($this->request->packing_list_path && Storage::disk('private_uploads')->exists($this->request->packing_list_path)) {
-            $mail->attach(Storage::disk('private_uploads')->path($this->request->packing_list_path));
+            $mail->attachFromStorageDisk('private_uploads', $this->request->packing_list_path);
         }
 
         return $mail;

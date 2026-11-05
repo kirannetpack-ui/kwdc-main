@@ -22,6 +22,36 @@
         </dl>
     </section>
     <section class="detail-section"><h3>Purpose</h3><p>{{ $record->purpose ?: 'No additional details.' }}</p></section>
+    @if($record->status === 'assigned' && $record->agreementEnd())
+        <section class="detail-section">
+            <h3>Agreement</h3>
+            <p>Ends {{ $record->agreementEnd()->format('d M Y') }}. Renewal priority ends {{ $record->renewalDeadline()->format('d M Y') }}.</p>
+            @if($record->renewalChoice() === 'renew')
+                <p>Client requested renewal. Confirm the new agreement with the client before releasing this space.</p>
+            @elseif($record->renewalChoice() === 'vacate')
+                <p>Client plans to vacate at agreement end.</p>
+            @endif
+            @if($canConfirmMoveOut && $record->agreementEnd()->lte(today()) && $record->renewalChoice() !== 'renew')
+                <form method="POST" action="{{ route('warehouse-requests.move-out', $record->id) }}">
+                    @csrf
+                    <label><input type="checkbox" name="space_cleared" value="1" required> I confirm that the client has vacated and the space is clear.</label>
+                    <button class="btn btn-primary" type="submit">Confirm move-out</button>
+                </form>
+            @endif
+        </section>
+    @endif
+    @if($canConfirmMoveOut && (in_array($record->status, ['pending', 'approved']) || ($record->status === 'assigned' && $record->renewalChoice() === 'renew')))
+        <form method="POST" action="{{ route('warehouse-requests.reserve', $record) }}" class="detail-section">
+            @csrf
+            @if($record->status === 'assigned')
+                <input type="hidden" name="renewal" value="1">
+            @endif
+            <label>Start date <input type="date" name="start_date" required value="{{ old('start_date', $record->status === 'assigned' ? $record->agreementEnd()?->copy()->addDay()->toDateString() : $record->preferred_start_date?->toDateString()) }}"></label>
+            <label>Agreement end <input type="date" name="end_date" required value="{{ old('end_date') }}"></label>
+            <label>Monthly rent (NPR) <input type="number" name="monthly_rent" min="0.01" step="0.01" required value="{{ old('monthly_rent', $record->monthly_rent ?: null) }}"></label>
+            <button class="btn btn-primary">Reserve and issue prepaid invoice</button>
+        </form>
+    @endif
     @if($canReview && $record->status === 'pending')
     <form method="POST" action="{{ route('warehouse-requests.decide', $record->id) }}" class="d-flex gap-3">
         @csrf

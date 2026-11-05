@@ -1,5 +1,16 @@
 <?php
 
+$objectStorage = [
+    'driver' => 'r2',
+    'key' => env('R2_ACCESS_KEY_ID'),
+    'secret' => env('R2_SECRET_ACCESS_KEY'),
+    'region' => 'auto',
+    'endpoint' => env('R2_ENDPOINT'),
+    'use_path_style_endpoint' => true,
+    'request_checksum_calculation' => 'when_required',
+    'throw' => true,
+];
+
 return [
 
     /*
@@ -14,6 +25,7 @@ return [
     */
 
     'default' => env('FILESYSTEM_DISK', 'local'),
+    'direct_uploads' => (bool) env('DIRECT_UPLOADS_ENABLED', false),
 
     /*
     |--------------------------------------------------------------------------
@@ -38,7 +50,10 @@ return [
             'report' => false,
         ],
 
-        'private_uploads' => [
+        'private_uploads' => env('UPLOADS_DRIVER', 'local') === 's3' ? $objectStorage + [
+            'bucket' => env('R2_PRIVATE_BUCKET'),
+            'options' => ['CacheControl' => 'private, no-store'],
+        ] : [
             'driver' => 'local',
             'root' => storage_path('app/private/uploads'),
             'visibility' => 'private',
@@ -46,7 +61,10 @@ return [
             'report' => false,
         ],
 
-        'public' => [
+        'public' => env('UPLOADS_DRIVER', 'local') === 's3' ? $objectStorage + [
+            'bucket' => env('R2_PUBLIC_BUCKET'),
+            'url' => env('R2_PUBLIC_URL'),
+        ] : [
             'driver' => 'local',
             'root' => storage_path('app/public'),
             'url' => rtrim(env('APP_URL', 'http://localhost'), '/').'/storage',

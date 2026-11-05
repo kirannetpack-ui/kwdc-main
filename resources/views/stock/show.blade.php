@@ -49,7 +49,7 @@
         <div class="text-center mt-4 md:mt-0">
             @if($stock->qr_code_path && Storage::disk('public')->exists($stock->qr_code_path))
                 <div class="bg-white p-2 rounded-lg shadow-md inline-block">
-                    <img src="{{ asset('storage/' . $stock->qr_code_path) }}" alt="QR Code" class="w-28 h-28">
+                    <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($stock->qr_code_path) }}" alt="QR Code" class="w-28 h-28">
                 </div>
                 <div class="mt-2 flex gap-2 justify-center">
                     <a href="{{ route('stock.download-qr', $stock->id) }}" class="text-sm text-blue-500 hover:text-blue-700">
@@ -269,7 +269,7 @@
     <!-- QR Code Data (Hidden for printing) -->
     <div id="qrPrintArea" style="display: none;">
         <div style="text-align: center; padding: 20px;">
-            <img src="{{ asset('storage/' . $stock->qr_code_path) }}" alt="QR Code" style="width: 200px; height: 200px;">
+            <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($stock->qr_code_path) }}" alt="QR Code" style="width: 200px; height: 200px;">
             <h3>{{ $stock->product_name }}</h3>
             <p>Batch ID: {{ $stock->batch_id }}</p>
             <p>SKU: {{ $stock->sku }}</p>

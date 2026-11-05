@@ -151,7 +151,16 @@
         </div>
 
         <!-- Payment Actions for Pending Client Invoices -->
-        @if(!$isPaid && !$isAdmin)
+        @if(!$isPaid && $invoice->order_type === 'dispatch' && $invoice->payment_method === 'cod')
+            <p class="font-semibold">Payment arrangement: Cash on delivery</p>
+        @elseif(!$isPaid && $invoice->order_type === 'dispatch' && $invoice->payment_method === 'online')
+            <p class="font-semibold">Payment arrangement: Online payment</p>
+            @unless($isAdmin)
+                <a href="{{ route('payment.index', ['invoice_id' => $invoice->id]) }}" class="btn btn-primary">View online payment options</a>
+            @endunless
+        @elseif(!$isPaid && $invoice->order_type === 'dispatch')
+            <p class="font-semibold">Payment arrangement: To be agreed</p>
+        @elseif(!$isPaid && !$isAdmin)
             <div class="pt-6 border-t border-gray-100 bg-orange-50/60 -mx-8 -mb-8 p-8 rounded-b-3xl space-y-4">
                 <div class="flex items-center justify-between">
                     <div>

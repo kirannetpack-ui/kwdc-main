@@ -60,7 +60,7 @@
 
         <!-- Driver / Admin Action Controls -->
         <div class="flex flex-wrap items-center gap-2">
-            @if($isAdmin || $isAssignedDriver)
+            @if($isAssignedDriver)
                 <form method="POST" action="{{ route('dispatch.update-status', $dispatch->id) }}" class="inline-flex items-center gap-2">
                     @csrf
                     @if($status === 'assigned')

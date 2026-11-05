@@ -6,7 +6,7 @@ use Illuminate\Console\Command;
 
 class ProductionPreflight extends Command
 {
-    protected $signature = 'app:production-preflight';
+    protected $signature = 'app:production-preflight {--check-database : Check launch requirements and the database for demo accounts}';
 
     protected $description = 'Validate required production configuration before the app starts.';
 
@@ -32,6 +32,23 @@ class ProductionPreflight extends Command
         $this->validateMail($failures, $phaseOneDemo);
         $this->validateMaps($failures, $phaseOneDemo);
         $this->validatePayments($failures, $phaseOneDemo);
+        if (! $phaseOneDemo && config('kwdc.serverless')) {
+            $this->validateStorage($failures);
+        }
+        if ($this->option('check-database') && ! $phaseOneDemo) {
+            foreach (['name' => 'COMPANY_LEGAL_NAME', 'address' => 'COMPANY_ADDRESS', 'email' => 'COMPANY_EMAIL', 'pan' => 'COMPANY_PAN'] as $field => $variable) {
+                $this->requireFilled($failures, $variable, config("company.{$field}"));
+            }
+            $commands = \Illuminate\Support\Facades\Artisan::all();
+            foreach (['shipments:update-status', 'invoices:send-reminders', 'drivers:verify-documents'] as $command) {
+                if (! isset($commands[$command])) {
+                    $failures[] = "Scheduled command {$command} has no implementation.";
+                }
+            }
+            if ($failures === [] && \App\Models\User::where('email', 'like', '%@kwdc.test')->exists()) {
+                $failures[] = 'Use a separate production database without demo accounts.';
+            }
+        }
 
         if ($failures !== []) {
             $this->error('Production preflight failed:');
@@ -88,15 +105,40 @@ class ProductionPreflight extends Command
             return;
         }
 
-        $this->requireFilled($failures, 'KHALTI_PUBLIC_KEY', config('payment.khalti.public_key'));
-        $this->requireFilled($failures, 'KHALTI_SECRET_KEY', config('payment.khalti.secret_key'));
-        $this->requireHttpsUrl($failures, 'KHALTI_BASE_URL', config('payment.khalti.base_url'));
-        $this->requireHttpsUrl($failures, 'KHALTI_VERIFICATION_URL', config('payment.khalti.verification_url'));
+        if (filled(config('payment.khalti.public_key')) || filled(config('payment.khalti.secret_key'))) {
+            $this->requireFilled($failures, 'KHALTI_PUBLIC_KEY', config('payment.khalti.public_key'));
+            $this->requireFilled($failures, 'KHALTI_SECRET_KEY', config('payment.khalti.secret_key'));
+            $this->requireHttpsUrl($failures, 'KHALTI_BASE_URL', config('payment.khalti.base_url'));
+            $this->requireHttpsUrl($failures, 'KHALTI_VERIFICATION_URL', config('payment.khalti.verification_url'));
+        }
 
-        $this->requireFilled($failures, 'ESEWA_MERCHANT_CODE', config('payment.esewa.merchant_code'));
-        $this->requireFilled($failures, 'ESEWA_SECRET_KEY', config('payment.esewa.secret_key'));
-        $this->requireHttpsUrl($failures, 'ESEWA_PAYMENT_URL', config('payment.esewa.payment_url'));
-        $this->requireHttpsUrl($failures, 'ESEWA_VERIFICATION_URL', config('payment.esewa.verification_url'));
+        if (filled(config('payment.esewa.merchant_code')) || filled(config('payment.esewa.secret_key'))) {
+            $this->requireFilled($failures, 'ESEWA_MERCHANT_CODE', config('payment.esewa.merchant_code'));
+            $this->requireFilled($failures, 'ESEWA_SECRET_KEY', config('payment.esewa.secret_key'));
+            $this->requireHttpsUrl($failures, 'ESEWA_PAYMENT_URL', config('payment.esewa.payment_url'));
+            $this->requireHttpsUrl($failures, 'ESEWA_VERIFICATION_URL', config('payment.esewa.verification_url'));
+        }
+
+        if (filled(config('payment.banking.qr.image_url'))) {
+            $this->requireHttpsUrl($failures, 'BANK_QR_IMAGE_URL', config('payment.banking.qr.image_url'));
+        }
+    }
+
+    private function validateStorage(array &$failures): void
+    {
+        $this->requireTrue($failures, 'DIRECT_UPLOADS_ENABLED', config('filesystems.direct_uploads'));
+        foreach (['public', 'private_uploads'] as $disk) {
+            $settings = config("filesystems.disks.{$disk}");
+            $this->requireExact($failures, "Storage driver for {$disk}", $settings['driver'], 'r2');
+            foreach (['bucket', 'key', 'secret'] as $field) {
+                $this->requireFilled($failures, "{$disk} storage {$field}", $settings[$field] ?? null);
+            }
+            $this->requireHttpsUrl($failures, "{$disk} storage endpoint", $settings['endpoint'] ?? null);
+        }
+        $this->requireHttpsUrl($failures, 'R2_PUBLIC_URL', config('filesystems.disks.public.url'));
+        if (config('filesystems.disks.public.bucket') === config('filesystems.disks.private_uploads.bucket')) {
+            $failures[] = 'Public assets and private documents require separate buckets.';
+        }
     }
 
     private function validateMaps(array &$failures, bool $phaseOneDemo): void

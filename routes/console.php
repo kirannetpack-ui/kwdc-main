@@ -20,7 +20,20 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote')->hourly();
 
 // KTM-WDC Scheduled Tasks
-Schedule::command('warehouse:billing')->daily();           // Run billing daily
+Schedule::command('warehouse:send-renewal-reminders')->dailyAt('09:00')->withoutOverlapping();
+Schedule::call(function () {
+    \App\Models\WarehouseRequest::where('status', 'reserved')
+        ->whereDate('preferred_start_date', '<=', today())
+        ->select('id')
+        ->chunkById(100, function ($records) {
+            $reservations = app(\App\Services\WarehouseReservations::class);
+            foreach ($records as $record) {
+                $reservations->activate($record->id);
+            }
+        });
+})->name('warehouse:activate-prepaid-reservations')->everyFiveMinutes()->withoutOverlapping();
+
+Schedule::command('warehouse:billing')->dailyAt('08:00')->withoutOverlapping();           // Run billing daily
 Schedule::command('shipments:update-status')->everyTenMinutes();  // Update shipment status
 Schedule::command('invoices:send-reminders')->dailyAt('09:00');    // Send invoice reminders
 Schedule::command('drivers:verify-documents')->weekly();           // Verify driver docs weekly

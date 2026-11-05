@@ -102,6 +102,13 @@
                         <option value="vat">VAT Bill</option>
                         <option value="pan">PAN Bill</option>
                     </select>
+                    <label class="block mt-3">Agreed payment method
+                        <select name="payment_method" class="w-full px-4 py-2 border rounded-lg">
+                            <option value="">To be agreed</option>
+                            <option value="cod" @selected(old('payment_method') === 'cod')>Cash on delivery</option>
+                            <option value="online" @selected(old('payment_method') === 'online')>Online payment</option>
+                        </select>
+                    </label>
                 </div>
                 <div id="panField" style="display: none;">
                     <label class="block text-gray-700 font-semibold mb-2">PAN/VAT Number</label>

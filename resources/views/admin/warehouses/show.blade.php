@@ -287,25 +287,25 @@
                 @if($warehouse->front_photo)
                 <div>
                     <label class="block text-gray-500 text-sm font-semibold mb-2">Front View</label>
-                    <img src="{{ Storage::url($warehouse->front_photo) }}" alt="Front View" class="w-full h-48 object-cover rounded-lg">
+                    <img src="{{ Storage::disk('public')->url($warehouse->front_photo) }}" alt="Front View" class="w-full h-48 object-cover rounded-lg">
                 </div>
                 @endif
                 @if($warehouse->interior_photo_1)
                 <div>
                     <label class="block text-gray-500 text-sm font-semibold mb-2">Interior 1</label>
-                    <img src="{{ Storage::url($warehouse->interior_photo_1) }}" alt="Interior 1" class="w-full h-48 object-cover rounded-lg">
+                    <img src="{{ Storage::disk('public')->url($warehouse->interior_photo_1) }}" alt="Interior 1" class="w-full h-48 object-cover rounded-lg">
                 </div>
                 @endif
                 @if($warehouse->interior_photo_2)
                 <div>
                     <label class="block text-gray-500 text-sm font-semibold mb-2">Interior 2</label>
-                    <img src="{{ Storage::url($warehouse->interior_photo_2) }}" alt="Interior 2" class="w-full h-48 object-cover rounded-lg">
+                    <img src="{{ Storage::disk('public')->url($warehouse->interior_photo_2) }}" alt="Interior 2" class="w-full h-48 object-cover rounded-lg">
                 </div>
                 @endif
                 @if($warehouse->exterior_photo_1)
                 <div>
                     <label class="block text-gray-500 text-sm font-semibold mb-2">Exterior View</label>
-                    <img src="{{ Storage::url($warehouse->exterior_photo_1) }}" alt="Exterior View" class="w-full h-48 object-cover rounded-lg">
+                    <img src="{{ Storage::disk('public')->url($warehouse->exterior_photo_1) }}" alt="Exterior View" class="w-full h-48 object-cover rounded-lg">
                 </div>
                 @endif
             </div>

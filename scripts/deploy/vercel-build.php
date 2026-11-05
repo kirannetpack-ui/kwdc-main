@@ -3,7 +3,9 @@
 // Opt-in schema setup runs in Vercel's build environment, never in HTTP requests.
 $runMigrations = getenv('VERCEL_RUN_MIGRATIONS') === 'true';
 $seedDemo = getenv('KWDC_SEED_DEMO') === 'true';
-if (getenv('VERCEL_ENV') !== 'production' || (! $runMigrations && ! $seedDemo)) {
+$validateLaunch = filter_var(getenv('APP_LAUNCH_READY'), FILTER_VALIDATE_BOOLEAN)
+    && ! filter_var(getenv('PHASE_ONE_DEMO'), FILTER_VALIDATE_BOOLEAN);
+if (getenv('VERCEL_ENV') !== 'production' || (! $runMigrations && ! $seedDemo && ! $validateLaunch)) {
     exit(0);
 }
 
@@ -36,6 +38,13 @@ $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
 if ($runMigrations && Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]) !== 0) {
     fwrite(STDERR, Illuminate\Support\Facades\Artisan::output());
     exit(1);
+}
+
+if ($validateLaunch) {
+    if (Illuminate\Support\Facades\Artisan::call('app:production-preflight', ['--check-database' => true]) !== 0) {
+        fwrite(STDERR, Illuminate\Support\Facades\Artisan::output());
+        exit(1);
+    }
 }
 
 if ($seedDemo) {

@@ -121,14 +121,21 @@ class SecurityAgencyManagementTest extends TestCase
             'status' => 'active',
         ]);
 
-        $assignmentResponse = $this->actingAs($user)->post('/security/assignments', [
+        $assignmentData = [
             'warehouse_id' => $warehouse->id,
             'personnel_id' => $personnel->id,
             'start_date' => '2026-08-15',
             'shift' => 'day',
             'status' => 'active',
             'total_cost' => 500,
-        ]);
+        ];
+
+        $this->actingAs($user)->post('/security/assignments', $assignmentData)->assertForbidden();
+        $admin = User::factory()->create(['role' => 'admin', 'is_admin' => true]);
+        $this->actingAs($admin)->post(route('admin.security.agency.warehouse-access', $agency), [
+            'warehouse_ids' => [$warehouse->id],
+        ])->assertRedirect();
+        $assignmentResponse = $this->actingAs($user)->post('/security/assignments', $assignmentData);
 
         $assignmentResponse->assertRedirect('/security/assignments');
         $this->assertDatabaseHas('security_assignments', ['warehouse_id' => $warehouse->id, 'agency_id' => $agency->id]);

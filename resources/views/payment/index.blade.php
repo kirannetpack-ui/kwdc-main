@@ -9,7 +9,7 @@
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-[#E8E2D8]">
         <div>
             <h2 class="text-2xl font-serif font-bold text-[#24201D] tracking-tight" style="font-family: 'Newsreader', Georgia, serif;">Settle Pending Invoices</h2>
-            <p class="text-sm text-[#645D56] mt-1">Select an outstanding invoice to pay securely using Khalti or eSewa.</p>
+            <p class="text-sm text-[#645D56] mt-1">Review an outstanding invoice and choose an available payment method.</p>
         </div>
         <div>
             <a href="{{ route('payment.history') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-[#24201D] bg-[#FFFDF9] border border-[#E8E2D8] hover:bg-[#FAF8F5] transition shadow-2xs">
@@ -78,6 +78,7 @@
                         </div>
 
                         <div class="flex flex-wrap items-center gap-3">
+                            @if(config('payment.khalti.secret_key'))
                             <!-- Khalti Button -->
                             <button type="button" 
                                     onclick="payWithKhalti({{ $invoice->id }}, {{ $invAmount }})" 
@@ -87,6 +88,8 @@
                                 <span class="text-white">Pay with Khalti</span>
                             </button>
 
+                            @endif
+                            @if(config('payment.esewa.secret_key') && config('payment.esewa.merchant_code'))
                             <!-- eSewa Button -->
                             <form action="{{ route('payment.esewa.init') }}" method="POST" class="inline">
                                 @csrf
@@ -99,6 +102,8 @@
                                 </button>
                             </form>
 
+                            @endif
+                            @if(config('payment.stripe.secret'))
                             <!-- Stripe (Card / International) Button -->
                             <form action="{{ route('payment.stripe.init') }}" method="POST" class="inline">
                                 @csrf
@@ -111,6 +116,8 @@
                                 </button>
                             </form>
 
+                            @endif
+                            @if(config('payment.banking.accounts'))
                             <!-- Direct Bank Transfer Button -->
                             <button type="button" 
                                     onclick="openBankTransferModal({{ $invoice->id }}, '{{ $invoice->invoice_number ?? ('INV-' . $invoice->id) }}', {{ $invAmount }})" 
@@ -119,6 +126,8 @@
                                 <span>Direct Bank</span>
                             </button>
 
+                            @endif
+                            @if(config('payment.banking.qr.image_url'))
                             <!-- Interbank Banking QR Button -->
                             <button type="button" 
                                     onclick="openBankingQrModal({{ $invoice->id }}, '{{ $invoice->invoice_number ?? ('INV-' . $invoice->id) }}', {{ $invAmount }})" 
@@ -127,6 +136,7 @@
                                 <span>Banking QR</span>
                             </button>
 
+                            @endif
                             <!-- View Details -->
                             <a href="{{ route('invoices.show', $invoice->id) }}" 
                                class="inline-flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-semibold text-[#645D56] hover:text-[#24201D] bg-[#FFFDF9] border border-[#E8E2D8] hover:bg-[#FAF8F5] transition">
@@ -200,50 +210,15 @@
                     <i class="fas fa-landmark text-emerald-600 mr-1"></i> Official KTM-WDC Bank Accounts
                 </label>
                 <div class="space-y-2">
-                    <!-- Account 1: Nabil Bank -->
-                    <div class="p-3 rounded-xl border border-slate-200 bg-white hover:border-emerald-300 transition flex items-center justify-between">
-                        <div>
-                            <div class="flex items-center gap-2">
-                                <span class="font-bold text-xs text-slate-900">Nabil Bank Ltd.</span>
-                                <span class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 text-emerald-700">Corporate Primary</span>
-                            </div>
-                            <div class="font-mono text-xs text-slate-700 font-bold mt-0.5">A/C: 01100175023910</div>
-                            <div class="text-[10px] text-slate-400">Durbar Marg Main Branch | SWIFT: NARBNPKA</div>
+                    @foreach(config('payment.banking.accounts') as $account)
+                        <div class="rounded-xl border border-slate-200 p-3">
+                            <strong>{{ $account['bank_name'] }}</strong>
+                            <div>{{ $account['account_name'] }}</div>
+                            <div>Account {{ $account['account_number'] }}</div>
+                            <div>{{ $account['branch'] }}</div>
+                            <button type="button" onclick="copyAccountNo(this.dataset.account, this)" data-account="{{ $account['account_number'] }}">Copy account number</button>
                         </div>
-                        <button type="button" onclick="copyAccountNo('01100175023910', this)" class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 text-slate-600 text-[11px] font-semibold transition border border-slate-200">
-                            <i class="fas fa-copy mr-1"></i> Copy A/C
-                        </button>
-                    </div>
-
-                    <!-- Account 2: Global IME Bank -->
-                    <div class="p-3 rounded-xl border border-slate-200 bg-white hover:border-emerald-300 transition flex items-center justify-between">
-                        <div>
-                            <div class="flex items-center gap-2">
-                                <span class="font-bold text-xs text-slate-900">Global IME Bank Ltd.</span>
-                                <span class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-blue-50 text-blue-700">Cargo Hub</span>
-                            </div>
-                            <div class="font-mono text-xs text-slate-700 font-bold mt-0.5">A/C: 00101010045623</div>
-                            <div class="text-[10px] text-slate-400">New Road Branch | SWIFT: GLBLNPKA</div>
-                        </div>
-                        <button type="button" onclick="copyAccountNo('00101010045623', this)" class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 text-slate-600 text-[11px] font-semibold transition border border-slate-200">
-                            <i class="fas fa-copy mr-1"></i> Copy A/C
-                        </button>
-                    </div>
-
-                    <!-- Account 3: NIC Asia Bank -->
-                    <div class="p-3 rounded-xl border border-slate-200 bg-white hover:border-emerald-300 transition flex items-center justify-between">
-                        <div>
-                            <div class="flex items-center gap-2">
-                                <span class="font-bold text-xs text-slate-900">NIC Asia Bank Ltd.</span>
-                                <span class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-rose-50 text-rose-700">Corporate Branch</span>
-                            </div>
-                            <div class="font-mono text-xs text-slate-700 font-bold mt-0.5">A/C: 109200548123901</div>
-                            <div class="text-[10px] text-slate-400">Thamel Corporate Branch | SWIFT: NICAIPKA</div>
-                        </div>
-                        <button type="button" onclick="copyAccountNo('109200548123901', this)" class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 text-slate-600 text-[11px] font-semibold transition border border-slate-200">
-                            <i class="fas fa-copy mr-1"></i> Copy A/C
-                        </button>
-                    </div>
+                    @endforeach
                 </div>
             </div>
 
@@ -252,10 +227,9 @@
                 <div>
                     <label class="block text-xs font-semibold text-slate-700 mb-1">Target KTM-WDC Bank <span class="text-rose-500">*</span></label>
                     <select name="bank_name" required class="w-full text-xs rounded-xl border border-slate-300 px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                        <option value="Nabil Bank Ltd.">Nabil Bank Ltd. (A/C: 01100175023910)</option>
-                        <option value="Global IME Bank Ltd.">Global IME Bank Ltd. (A/C: 00101010045623)</option>
-                        <option value="NIC Asia Bank Ltd.">NIC Asia Bank Ltd. (A/C: 109200548123901)</option>
-                        <option value="Other Bank / ConnectIPS">Other Bank / ConnectIPS Interbank</option>
+                        @foreach(config('payment.banking.accounts') as $account)
+                            <option value="{{ $account['bank_name'] }}">{{ $account['bank_name'] }}</option>
+                        @endforeach
                     </select>
                 </div>
 
@@ -323,49 +297,10 @@
                     <span>Fonepay &amp; NepalPay Interbank QR</span>
                 </div>
 
-                <!-- Realistic Universal QR Code Stand -->
-                <div class="bg-white p-2 flex items-center justify-center rounded-xl">
-                    <svg viewBox="0 0 200 200" width="180" height="180" class="mx-auto">
-                        <!-- Corner Markers -->
-                        <rect x="10" y="10" width="45" height="45" rx="6" fill="#1e1b4b" />
-                        <rect x="20" y="20" width="25" height="25" rx="3" fill="#ffffff" />
-                        <rect x="27" y="27" width="11" height="11" fill="#4338ca" />
-
-                        <rect x="145" y="10" width="45" height="45" rx="6" fill="#1e1b4b" />
-                        <rect x="155" y="20" width="25" height="25" rx="3" fill="#ffffff" />
-                        <rect x="162" y="27" width="11" height="11" fill="#4338ca" />
-
-                        <rect x="10" y="145" width="45" height="45" rx="6" fill="#1e1b4b" />
-                        <rect x="20" y="155" width="25" height="25" rx="3" fill="#ffffff" />
-                        <rect x="27" y="162" width="11" height="11" fill="#4338ca" />
-
-                        <!-- Data Modules Matrix -->
-                        <rect x="70" y="15" width="12" height="12" rx="2" fill="#312e81" />
-                        <rect x="90" y="25" width="12" height="12" rx="2" fill="#312e81" />
-                        <rect x="110" y="15" width="12" height="12" rx="2" fill="#312e81" />
-
-                        <rect x="20" y="75" width="12" height="12" rx="2" fill="#312e81" />
-                        <rect x="40" y="90" width="12" height="12" rx="2" fill="#312e81" />
-                        <rect x="20" y="110" width="12" height="12" rx="2" fill="#312e81" />
-
-                        <rect x="145" y="75" width="12" height="12" rx="2" fill="#312e81" />
-                        <rect x="165" y="90" width="12" height="12" rx="2" fill="#312e81" />
-                        <rect x="150" y="110" width="12" height="12" rx="2" fill="#312e81" />
-
-                        <rect x="75" y="145" width="12" height="12" rx="2" fill="#312e81" />
-                        <rect x="95" y="165" width="12" height="12" rx="2" fill="#312e81" />
-                        <rect x="120" y="150" width="12" height="12" rx="2" fill="#312e81" />
-
-                        <!-- Center Logo Badge -->
-                        <circle cx="100" cy="100" r="24" fill="#ffffff" stroke="#4f46e5" stroke-width="2" />
-                        <text x="100" y="105" text-anchor="middle" font-family="'Newsreader', Georgia, serif" font-weight="bold" font-size="14" fill="#ea580c">KTM</text>
-                    </svg>
-                </div>
-
-                <div class="pt-1 text-[11px] text-slate-500 font-semibold">
-                    Merchant: <span class="text-slate-900 font-bold">KTM-WDC LOGISTICS PVT LTD</span><br>
-                    PAN: <span class="font-mono text-slate-700">609823412</span>
-                </div>
+                @if(config('payment.banking.qr.image_url'))
+                    <img src="{{ config('payment.banking.qr.image_url') }}" alt="Bank-issued merchant QR" width="180" height="180" class="mx-auto">
+                    <p>{{ config('payment.banking.qr.merchant_name') }}</p>
+                @endif
             </div>
 
             <!-- Amount readout -->

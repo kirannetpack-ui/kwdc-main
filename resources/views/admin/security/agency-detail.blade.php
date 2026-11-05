@@ -97,4 +97,20 @@
     </div>
     @endif
 </div>
+
+@if($agency->status === 'approved')
+    <section class="mt-6">
+        <h2>Authorized warehouses</h2>
+        <form method="POST" action="{{ route('admin.security.agency.warehouse-access', $agency) }}">
+            @csrf
+            @foreach($warehouses as $warehouse)
+                <label class="block">
+                    <input type="checkbox" name="warehouse_ids[]" value="{{ $warehouse->id }}" @checked($authorizedIds->contains($warehouse->id))>
+                    {{ $warehouse->name }} · {{ $warehouse->location }}
+                </label>
+            @endforeach
+            <button type="submit" class="btn btn-primary">Save warehouse access</button>
+        </form>
+    </section>
+@endif
 @endsection

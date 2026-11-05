@@ -16,7 +16,7 @@ class ContractExpiryReminder extends Mailable
     public $request;
     public $daysLeft;
 
-    public function __construct(WarehouseRequest $request, $daysLeft)
+    public function __construct(WarehouseRequest $request, $daysLeft, public bool $renewalNotice = false)
     {
         $this->request = $request;
         $this->daysLeft = $daysLeft;

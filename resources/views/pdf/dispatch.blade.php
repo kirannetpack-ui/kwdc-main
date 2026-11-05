@@ -13,6 +13,7 @@
                         Dispatch Order #{{ $dispatch->id }}
                     </h2>
                     <p style="margin: 0; font-size: 11px; color: #64748b;">
+                        @if($dispatch->invoice_no) Invoice {{ $dispatch->invoice_no }}<br> @endif
                         Tracking Waybill: <strong style="color: #ea580c;">{{ $dispatch->tracking_id ?: 'KWDC-TRK-' . $dispatch->id }}</strong>
                     </p>
                 </td>
@@ -94,10 +95,12 @@
         </table>
     @endif
 
+    @unless($hideTransportAmounts ?? false)
     <div style="margin-top: 14px; text-align: right; padding: 12px 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px;">
         <span style="font-size: 11px; color: #64748b; margin-right: 12px; text-transform: uppercase; font-weight: 700;">Total Freight Consignment:</span>
         <strong style="font-size: 16px; color: #ea580c;">
             NPR {{ number_format((float) ($dispatch->grand_total ?? $dispatch->total_price ?? 0), 2) }}
         </strong>
     </div>
+    @endunless
 @endsection

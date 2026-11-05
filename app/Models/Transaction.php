@@ -53,22 +53,14 @@ class Transaction extends Model
     // Helper Methods
     public static function generateReceiptNo()
     {
-        $year = date('Y');
-        $month = date('m');
-        $lastTransaction = self::whereYear('created_at', $year)
-            ->whereMonth('created_at', $month)
-            ->whereNotNull('receipt_no')
-            ->orderBy('id', 'desc')
-            ->first();
+        $prefix = 'RCP-'.now()->format('Ym').'-';
+        $lastReceipt = self::where('receipt_no', 'like', $prefix.'%')
+            ->orderByRaw('length(receipt_no) desc')
+            ->orderByDesc('receipt_no')
+            ->value('receipt_no');
+        $next = $lastReceipt ? (int) substr($lastReceipt, strlen($prefix)) + 1 : 1;
 
-        if ($lastTransaction && $lastTransaction->receipt_no) {
-            $lastNumber = intval(substr($lastTransaction->receipt_no, -4));
-            $newNumber = str_pad($lastNumber + 1, 4, '0', STR_PAD_LEFT);
-        } else {
-            $newNumber = '0001';
-        }
-
-        return "RCP-{$year}{$month}-{$newNumber}";
+        return $prefix.str_pad((string) $next, 4, '0', STR_PAD_LEFT);
     }
 
     // Scopes

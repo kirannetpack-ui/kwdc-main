@@ -205,7 +205,7 @@
                                 <label class="block text-sm font-medium text-gray-700 mb-2">{{ $label }}</label>
                                 @if($warehouse->$field)
                                     <div class="mb-2">
-                                        <img src="{{ Storage::url($warehouse->$field) }}" alt="{{ $label }}" class="h-24 w-auto rounded object-cover border">
+                                        <img src="{{ Storage::disk('public')->url($warehouse->$field) }}" alt="{{ $label }}" class="h-24 w-auto rounded object-cover border">
                                         <p class="text-xs text-gray-500 mt-1">Current file</p>
                                     </div>
                                 @endif
@@ -219,7 +219,7 @@
                                 <label class="block text-sm font-medium text-gray-700 mb-2">{{ $label }}</label>
                                 @if($warehouse->$field)
                                     <div class="mb-2 text-sm text-blue-600">
-                                        <i class="fas fa-file-pdf mr-1"></i> <a href="{{ Storage::url($warehouse->$field) }}" target="_blank">View Current</a>
+                                        <i class="fas fa-file-pdf mr-1"></i> <a href="{{ route('documents.private.show', ['path' => $warehouse->$field]) }}" target="_blank">View Current</a>
                                     </div>
                                 @endif
                                 <input type="file" name="{{ $field }}" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500">

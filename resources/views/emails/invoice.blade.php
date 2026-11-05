@@ -9,7 +9,7 @@
         : (isset($invoice->due_date) && !empty($invoice->due_date) ? date('M d, Y', strtotime($invoice->due_date)) : 'Upon Receipt');
     $total = $invoice->grand_total ?? $invoice->total_amount ?? $invoice->amount ?? 0;
     $status = $invoice->payment_status ?? $invoice->status ?? 'Unpaid';
-    $viewUrl = url('/client/invoices/' . ($invoice->id ?? '1'));
+    $viewUrl = $invoice->id ? route('invoices.show', $invoice) : route('invoices.index');
 @endphp
 <div class="animate-fade">
     <div style="margin-bottom: 24px; text-align: center;">
@@ -50,7 +50,7 @@
     </div>
 
     <div style="text-align: center; margin-top: 24px;">
-        <a href="{{ $viewUrl }}" style="display: inline-block; background: #d96b43; color: white; text-decoration: none; padding: 11px 26px; border-radius: 8px; font-weight: 600; font-size: 14px;">View & Pay Invoice Online →</a>
+        <a href="{{ $viewUrl }}" style="display: inline-block; background: #d96b43; color: white; text-decoration: none; padding: 11px 26px; border-radius: 8px; font-weight: 600; font-size: 14px;">{{ $invoice->payment_method === 'cod' ? 'View cash-on-delivery invoice' : 'View invoice' }} →</a>
     </div>
 </div>
 @endsection

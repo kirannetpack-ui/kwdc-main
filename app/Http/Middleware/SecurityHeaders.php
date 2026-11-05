@@ -28,6 +28,18 @@ class SecurityHeaders
             "object-src 'none'",
         ];
 
+        foreach ([config('filesystems.disks.public.url'), config('payment.banking.qr.image_url')] as $imageUrl) {
+            if (is_string($imageUrl) && preg_match('~^https://[a-z0-9.-]+(?::[0-9]+)?(?=/|$)~i', $imageUrl, $matches)) {
+                $cspDirectives[6] .= ' '.$matches[0];
+            }
+        }
+        if (config('filesystems.direct_uploads')) {
+            $endpoint = config('filesystems.disks.private_uploads.endpoint');
+            if (is_string($endpoint) && preg_match('~^https://[a-z0-9.-]+(?::[0-9]+)?(?=/|$)~i', $endpoint, $matches)) {
+                $cspDirectives[8] .= ' '.$matches[0];
+            }
+        }
+
         if ($request->isSecure() || app()->isProduction()) {
             $cspDirectives[] = "upgrade-insecure-requests";
             $response->headers->set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');

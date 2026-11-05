@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\OrderDelivered;
 use App\Models\User;
+use App\Services\DriverJobAssignment;
 use App\Models\DispatchOrder;
 use App\Models\PickupRequest;
+use App\Models\Proposal;
 use App\Models\Notification;
 use App\Models\Vehicle;
 use App\Models\DriverRate;
@@ -31,7 +34,7 @@ class DriverController extends Controller
         $stats = [
             'total_jobs' => DispatchOrder::where('driver_id', $userId)->count(),
             'active_jobs' => DispatchOrder::where('driver_id', $userId)
-                ->whereIn('status', ['assigned', 'picked_up', 'on_the_way'])
+                ->whereIn('status', DriverJobAssignment::ACTIVE_STATUSES)
                 ->count(),
             'completed_jobs' => DispatchOrder::where('driver_id', $userId)
                 ->where('status', 'delivered')
@@ -59,8 +62,7 @@ class DriverController extends Controller
             ->limit(5)
             ->get();
 
-        $availableJobs = DispatchOrder::whereNull('driver_id')
-            ->where('status', 'pending')
+        $availableJobs = app(DriverJobAssignment::class)->offers(DispatchOrder::class, Auth::id())
             ->orderBy('created_at', 'desc')
             ->limit(5)
             ->get();
@@ -99,8 +101,7 @@ class DriverController extends Controller
     }
 
     // Get available pickup requests
-    $availablePickups = PickupRequest::whereNull('driver_id')
-        ->where('status', 'pending')
+    $availablePickups = app(DriverJobAssignment::class)->offers(PickupRequest::class, Auth::id())
         ->orderBy('created_at', 'asc')
         ->limit(10)
         ->get();
@@ -173,15 +174,7 @@ class DriverController extends Controller
      */
     public function acceptPickup($id)
     {
-        $pickup = PickupRequest::whereNull('driver_id')
-            ->where('status', 'pending')
-            ->findOrFail($id);
-
-        $pickup->update([
-            'driver_id' => Auth::id(),
-            'status' => 'assigned',
-            'assigned_at' => now(),
-        ]);
+        $pickup = app(DriverJobAssignment::class)->claim(PickupRequest::class, $id, Auth::id());
 
         // Create notification for client
         if ($pickup->client_id) {
@@ -250,14 +243,17 @@ class DriverController extends Controller
      */
     public function availableJobs()
     {
-        $jobs = DispatchOrder::whereNull('driver_id')
-            ->where('status', 'pending')
+        $jobs = app(DriverJobAssignment::class)->offers(DispatchOrder::class, Auth::id())
             ->orderBy('created_at', 'desc')
             ->paginate(10);
+
+        $availablePickups = app(DriverJobAssignment::class)->offers(PickupRequest::class, Auth::id())
+            ->oldest()->paginate(10, ['*'], 'pickups_page');
 
         return view('driver.available-jobs', [
             'jobs' => $jobs,
             'availableJobs' => $jobs,
+            'availablePickups' => $availablePickups,
         ]);
     }
 
@@ -269,6 +265,7 @@ public function start($id)
     $job = DispatchOrder::where('driver_id', Auth::id())
         ->where('status', 'assigned')
         ->findOrFail($id);
+
 
     $job->update([
         'status' => 'picked_up',
@@ -292,6 +289,7 @@ public function cancel($id)
         'status' => 'cancelled',
         'cancelled_at' => now(),
     ]);
+    $job->forceFill(['tracking_enabled' => false])->save();
 
     // Create notification for client
     if ($job->client_id) {
@@ -317,8 +315,8 @@ public function jobs()
     $userId = $user->id;
     
     // Get active jobs (assigned, picked_up, on_the_way)
-    $activeJobs = DispatchOrder::where('driver_id', $userId)
-        ->whereIn('status', ['assigned', 'picked_up', 'on_the_way'])
+    $activeJobs = DispatchOrder::with('deliveryInvoice')->where('driver_id', $userId)
+        ->whereIn('status', DriverJobAssignment::ACTIVE_STATUSES)
         ->orderBy('created_at', 'desc')
         ->paginate(10);
     
@@ -335,8 +333,7 @@ public function jobs()
         ->paginate(10);
     
     // Get pending jobs (available to accept)
-    $availableJobs = DispatchOrder::whereNull('driver_id')
-        ->where('status', 'pending')
+    $availableJobs = app(DriverJobAssignment::class)->offers(DispatchOrder::class, Auth::id())
         ->orderBy('created_at', 'desc')
         ->paginate(10);
     
@@ -347,18 +344,79 @@ public function jobs()
      */
     public function accept($id)
     {
-        $job = DispatchOrder::whereNull('driver_id')
-            ->where('status', 'pending')
-            ->findOrFail($id);
-
-        $job->update([
-            'driver_id' => Auth::id(),
-            'status' => 'assigned',
-            'assigned_at' => now(),
-        ]);
+        $job = app(DriverJobAssignment::class)->claim(DispatchOrder::class, $id, Auth::id());
 
         return redirect()->route('driver.jobs')
             ->with('success', 'Job accepted successfully!');
+    }
+
+    public function reject($id)
+    {
+        app(DriverJobAssignment::class)->reject(DispatchOrder::class, $id, Auth::id());
+
+        return back()->with('success', 'Job declined.');
+    }
+
+    public function rejectPickup($id)
+    {
+        app(DriverJobAssignment::class)->reject(PickupRequest::class, $id, Auth::id());
+
+        return back()->with('success', 'Pickup declined.');
+    }
+
+    public function proposePrice(Request $request, $id)
+    {
+        $validated = $request->validate(['proposed_price' => 'required|numeric|min:100|max:99999999.99']);
+        $job = app(DriverJobAssignment::class)->offers(DispatchOrder::class, Auth::id())->findOrFail($id);
+
+        Proposal::create([
+            'client_id' => $job->client_id,
+            'driver_id' => Auth::id(),
+            'job_type' => 'dispatch',
+            'job_id' => $job->id,
+            'proposed_price' => $validated['proposed_price'],
+            'status' => 'pending',
+            'valid_until' => now()->addHours(24),
+        ]);
+
+        return back()->with('success', 'Quote sent to the client. It is valid for 24 hours.');
+    }
+
+    public function acceptCounter($proposalId)
+    {
+        DB::transaction(function () use ($proposalId) {
+            $proposal = $this->dispatchCounter($proposalId);
+            $proposal->proposed_price = $proposal->counter_price;
+            app(DriverJobAssignment::class)->acceptQuote($proposal);
+        }, 3);
+
+        return back()->with('success', 'Counter offer accepted.');
+    }
+
+    public function repropose(Request $request, $proposalId)
+    {
+        $validated = $request->validate(['proposed_price' => 'required|numeric|min:100|max:99999999.99']);
+
+        DB::transaction(function () use ($proposalId, $validated) {
+            $proposal = $this->dispatchCounter($proposalId);
+            $proposal->valid_until = now()->addHours(24);
+            $proposal->respondToCounter($validated['proposed_price']);
+        }, 3);
+
+        return back()->with('success', 'Revised quote sent to the client.');
+    }
+
+    private function dispatchCounter($id): Proposal
+    {
+        $proposal = Proposal::where('driver_id', Auth::id())
+            ->where('job_type', 'dispatch')
+            ->where('status', 'negotiating')
+            ->lockForUpdate()
+            ->findOrFail($id);
+
+        abort_if($proposal->isExpired(), 409, 'This quote has expired.');
+
+        return $proposal;
     }
 
     /**
@@ -366,14 +424,24 @@ public function jobs()
      */
     public function deliver($id)
     {
-        $job = DispatchOrder::where('driver_id', Auth::id())
-            ->where('status', 'assigned')
-            ->findOrFail($id);
+        $job = DB::transaction(function () use ($id) {
+            $job = DispatchOrder::where('driver_id', Auth::id())
+                ->whereIn('status', DriverJobAssignment::ACTIVE_STATUSES)
+                ->lockForUpdate()
+                ->findOrFail($id);
 
-        $job->update([
-            'status' => 'delivered',
-            'delivered_at' => now(),
-        ]);
+
+            $job->forceFill([
+                'status' => 'delivered',
+                'delivered_at' => now(),
+                'tracking_enabled' => false,
+                'driver_earning' => $job->driver_earning ?: (float) $job->base_price * 0.75,
+            ])->save();
+
+            return $job;
+        });
+
+        event(new OrderDelivered($job, 'dispatch'));
 
         return redirect()->route('driver.jobs')
             ->with('success', 'Job delivered successfully!');

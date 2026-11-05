@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\EquipmentRequest;
+use App\Models\Invoice;
 use App\Models\Equipment;
 use App\Models\Notification;
 use App\Models\User;
@@ -133,7 +134,11 @@ class EquipmentRequestController extends Controller
     public function update(Request $request, $id)
     {
         $record = EquipmentRequest::where('client_id', Auth::id())->where('status', 'pending')->findOrFail($id);
-        $record->update($this->recordData($this->validated($request)));
+        DB::transaction(function () use ($record, $request) {
+            $locked = EquipmentRequest::whereKey($record->id)->where('status', 'pending')->lockForUpdate()->firstOrFail();
+            $data = $this->recordData($this->validated($request));
+            $locked->update($data + ['quoted_price' => null, 'assigned_equipment_id' => $data['equipment_id'] ?? null]);
+        });
         return redirect()->route('equipment-requests.show', $record)->with('success', 'Request updated.');
     }
 
@@ -142,6 +147,53 @@ class EquipmentRequestController extends Controller
         $record = EquipmentRequest::where('client_id', Auth::id())->where('status', 'pending')->findOrFail($id);
         $record->update(['status' => 'cancelled']);
         return redirect()->route('equipment-requests.index')->with('success', 'Request cancelled.');
+    }
+
+    public function acceptQuote(int $id)
+    {
+        DB::transaction(function () use ($id) {
+            $record = EquipmentRequest::where('client_id', Auth::id())->lockForUpdate()->findOrFail($id);
+            abort_unless($record->status === 'pending' && $record->quoted_price > 0 && $record->assigned_equipment_id, 409);
+            $equipment = Equipment::lockForUpdate()->findOrFail($record->assigned_equipment_id);
+            abort_unless($equipment->status === 'available' && $record->start_date?->gte(today()), 409);
+            $this->requireAvailableDates($record, $equipment);
+
+            $record->update(['status' => 'approved']);
+            $invoice = Invoice::create([
+                'invoice_number' => 'KWDC-EQ-'.$record->id,
+                'order_type' => 'equipment',
+                'order_id' => $record->id,
+                'client_id' => $record->client_id,
+                'user_id' => $record->client_id,
+                'amount' => $record->quoted_price,
+                'subtotal' => $record->quoted_price,
+                'grand_total' => $record->quoted_price,
+                'status' => 'pending',
+                'payment_status' => 'unpaid',
+                'due_date' => $record->start_date,
+                'payment_due_date' => $record->start_date,
+                'notes' => 'Agreed equipment rental for '.$equipment->name,
+            ]);
+
+            if ($record->client?->email) {
+                \Illuminate\Support\Facades\Mail::to($record->client->email)
+                    ->queue((new \App\Mail\InvoiceGenerated($invoice))->afterCommit());
+            }
+        }, 3);
+
+        return back()->with('success', 'Quote accepted. The booking invoice is available under Invoices.');
+    }
+
+    private function requireAvailableDates(EquipmentRequest $record, Equipment $equipment): void
+    {
+        $overlaps = EquipmentRequest::where('assigned_equipment_id', $equipment->id)
+            ->whereKeyNot($record->id)
+            ->whereIn('status', ['approved', 'fulfilled'])
+            ->whereDate('start_date', '<=', $record->end_date)
+            ->whereDate('end_date', '>=', $record->start_date)
+            ->exists();
+
+        abort_if($overlaps, 409, 'This equipment is already reserved for the requested dates.');
     }
 
     public function approve(Request $request, $id)
@@ -164,6 +216,7 @@ class EquipmentRequestController extends Controller
             if ($to === 'approved') {
                 $validated = $request?->validate([
                     'assigned_equipment_id' => 'required|integer|exists:equipment,id',
+                    'quoted_price' => 'nullable|numeric|min:0.01|max:99999999.99',
                 ]) ?? [];
                 $equipmentId = (int) $validated['assigned_equipment_id'];
             }
@@ -174,14 +227,25 @@ class EquipmentRequestController extends Controller
 
             if ($to === 'approved') {
                 abort_unless($equipment && $equipment->status === 'available', 422, 'Choose available equipment.');
+                $this->requireAvailableDates($record, $equipment);
                 $record->fill([
                     'equipment_id' => $equipment->id,
                     'assigned_equipment_id' => $equipment->id,
                 ]);
+                if (isset($validated['quoted_price'])) {
+                    $record->quoted_price = $validated['quoted_price'];
+                    $record->save();
+                    return;
+                }
+                abort_if($record->quoted_price, 409, 'The client must accept the outstanding quote.');
             }
 
             if ($to === 'fulfilled') {
                 abort_unless($equipment && $equipment->status === 'available', 422, 'Choose available equipment before fulfillment.');
+                if ($record->quoted_price) {
+                    abort_unless(Invoice::where('order_type', 'equipment')->where('order_id', $record->id)
+                        ->where('payment_status', 'paid')->exists(), 409, 'The booking invoice must be paid before handover.');
+                }
                 $equipment->update(['status' => 'rented']);
             }
             if ($to === 'returned' && $equipment) $equipment->update(['status' => 'available']);

@@ -771,7 +771,7 @@
                                 <label class="form-label fw-bold">Front View</label>
                                 @if($warehouse->front_image)
                                     <div class="mb-2">
-                                        <img src="{{ asset('storage/' . $warehouse->front_image) }}" class="photo-preview" alt="Front View">
+                                        <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($warehouse->front_image) }}" class="photo-preview" alt="Front View">
                                         <small class="text-muted d-block">Current image</small>
                                     </div>
                                 @endif
@@ -791,7 +791,7 @@
                                 <label class="form-label fw-bold">Interior View</label>
                                 @if($warehouse->interior_image)
                                     <div class="mb-2">
-                                        <img src="{{ asset('storage/' . $warehouse->interior_image) }}" class="photo-preview" alt="Interior View">
+                                        <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($warehouse->interior_image) }}" class="photo-preview" alt="Interior View">
                                         <small class="text-muted d-block">Current image</small>
                                     </div>
                                 @endif
@@ -810,7 +810,7 @@
                                 <label class="form-label fw-bold">Exterior View</label>
                                 @if($warehouse->exterior_image)
                                     <div class="mb-2">
-                                        <img src="{{ asset('storage/' . $warehouse->exterior_image) }}" class="photo-preview" alt="Exterior View">
+                                        <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($warehouse->exterior_image) }}" class="photo-preview" alt="Exterior View">
                                         <small class="text-muted d-block">Current image</small>
                                     </div>
                                 @endif

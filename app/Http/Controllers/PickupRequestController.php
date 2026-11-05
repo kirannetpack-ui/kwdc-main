@@ -205,7 +205,6 @@ class PickupRequestController extends Controller
             // Create pickup request
             $pickup = PickupRequest::create([
                 'client_id' => $user->id,
-                'driver_id' => $request->driver_id,
                 'warehouse_id' => $request->destination_warehouse_id,
                 'tracking_id' => $trackingId,
                 'invoice_no' => $invoiceNo,

@@ -13,6 +13,20 @@ class AppServiceProvider extends ServiceProvider
 {
     public function boot()
     {
+        \Illuminate\Support\Facades\Storage::extend('r2', function ($app, array $config) {
+            $disk = \Illuminate\Support\Facades\Storage::build(array_replace($config, ['driver' => 's3']));
+            $disk->getClient()->getHandlerList()->prependInit(
+                \Aws\Middleware::mapCommand(function (\Aws\CommandInterface $command) {
+                    unset($command['ACL']);
+
+                    return $command;
+                }),
+                'kwdc-r2-no-object-acl'
+            );
+
+            return $disk;
+        });
+
         if (config('kwdc.demo')) {
             config(['mail.default' => 'array', 'sms.default' => 'log', 'services.ai.provider' => 'free']);
             config([

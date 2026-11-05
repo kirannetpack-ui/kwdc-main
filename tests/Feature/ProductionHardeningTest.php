@@ -251,7 +251,7 @@ class ProductionHardeningTest extends TestCase
         $this->assertStringContainsString("store('stock-documents/grns', 'private_uploads')", $controller);
         $this->assertStringContainsString("store('stock-documents/quality-certificates', 'private_uploads')", $controller);
         $this->assertStringContainsString("store('stock-documents/others', 'private_uploads')", $controller);
-        $this->assertStringContainsString("Storage::disk('private_uploads')->download", $controller);
+        $this->assertStringContainsString('PrivateFileResponse::class', $controller);
         $this->assertStringNotContainsString("stock_documents/invoices', 'public'", $controller);
         $this->assertStringNotContainsString("Storage::disk('public')->download(\$path)", $controller);
     }
@@ -330,7 +330,7 @@ class ProductionHardeningTest extends TestCase
         $this->assertStringContainsString('whereWarehouseRequestDocumentPath', $privateDocumentController);
         $this->assertStringContainsString("route('documents.private.show', ['path' => \$warehouseRequest->invoice_path])", $insuranceView);
         $this->assertStringNotContainsString("asset('storage/'.\$warehouseRequest->", $insuranceView);
-        $this->assertStringContainsString("Storage::disk('private_uploads')->path", $insuranceMail);
+        $this->assertStringContainsString("attachFromStorageDisk('private_uploads',", $insuranceMail);
         $this->assertStringNotContainsString("storage_path('app/public/'", $insuranceMail);
     }
 

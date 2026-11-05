@@ -29,7 +29,7 @@
                                     <td class="border p-2">{{ ucfirst($stock->status) }}</td>
                                     <td class="border p-2">
                                         @if($stock->qr_code)
-                                            <a href="{{ asset('storage/'.$stock->qr_code) }}" target="_blank">View QR</a>
+                                            <a href="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($stock->qr_code) }}" target="_blank">View QR</a>
                                         @else
                                             -
                                         @endif

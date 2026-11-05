@@ -31,8 +31,9 @@ class InvoiceController extends Controller
         $userId = $user->id;
         
         $invoiceIds = DB::table('invoices')
-            ->join('warehouse_requests', 'invoices.warehouse_request_id', '=', 'warehouse_requests.id')
-            ->where('warehouse_requests.client_id', $userId)
+            ->leftJoin('warehouse_requests', 'invoices.warehouse_request_id', '=', 'warehouse_requests.id')
+            ->where(fn ($query) => $query->where('warehouse_requests.client_id', $userId)
+                ->orWhere('invoices.client_id', $userId)->orWhere('invoices.user_id', $userId))
             ->pluck('invoices.id');
         
         $invoices = Invoice::whereIn('id', $invoiceIds)
@@ -78,6 +79,11 @@ class InvoiceController extends Controller
     public function verify($invoiceNumber)
     {
         $invoice = Invoice::where('invoice_number', $invoiceNumber)->firstOrFail();
+        if (in_array($invoice->order_type, ['dispatch', 'warehouse', 'equipment'], true)) {
+            abort_unless(Auth::check(), 403);
+            $this->authorizeInvoice($invoice);
+        }
+
         return view('invoices.verify', compact('invoice'));
     }
 
@@ -104,8 +110,7 @@ class InvoiceController extends Controller
         $user = Auth::user();
         abort_unless($user && ($user->isAdmin() || ($user->is_admin ?? false) || $user->role === 'admin'), 403, 'Only administrators can mark invoices as paid.');
 
-        $invoice->status = 'paid';
-        $invoice->save();
+        $invoice->markAsPaid($invoice->payment_method);
         
         return redirect()->back()->with('success', 'Invoice marked as paid successfully');
     }

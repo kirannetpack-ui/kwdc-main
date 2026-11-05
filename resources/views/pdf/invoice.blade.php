@@ -117,8 +117,12 @@
             <tr>
                 <th>Description</th>
                 <th class="right">Qty</th>
+            @empty($deliveryCopy)
                 <th class="right">Unit Price</th>
+            @endempty
+            @empty($deliveryCopy)
                 <th class="right">Total</th>
+            @endempty
             </tr>
         </thead>
         <tbody>
@@ -126,20 +130,27 @@
                 <tr>
                     <td>{{ $item['description'] ?? 'Service' }}</td>
                     <td class="right">{{ $item['quantity'] ?? 1 }}</td>
+            @empty($deliveryCopy)
                     <td class="right">Rs {{ number_format((float) ($item['unit_price'] ?? 0), 2) }}</td>
+            @endempty
+            @empty($deliveryCopy)
                     <td class="right">Rs {{ number_format((float) ($item['total'] ?? 0), 2) }}</td>
+            @endempty
                 </tr>
             @empty
                 <tr>
                     <td>Warehouse and distribution services</td>
                     <td class="right">1</td>
+                    @empty($deliveryCopy)
                     <td class="right">Rs {{ number_format((float) $invoice->subtotal, 2) }}</td>
                     <td class="right">Rs {{ number_format((float) $invoice->subtotal, 2) }}</td>
+                    @endempty
                 </tr>
             @endforelse
         </tbody>
     </table>
 
+    @empty($deliveryCopy)
     <table class="totals">
         <tr>
             <td>Subtotal</td>
@@ -158,6 +169,19 @@
     @if($invoice->notes)
         <p><strong>Notes:</strong> {{ $invoice->notes }}</p>
     @endif
+
+    @else
+        <h2>Delivery points</h2>
+        <p>Pickup: {{ $deliveryCopy->pickup_address }}</p>
+        <p>Payment arrangement: {{ match($invoice->payment_method) { 'cod' => 'Cash on delivery', 'online' => 'Online payment', default => 'See job details' } }}</p>
+        <ol>
+            @forelse($deliveryCopy->stops->sortBy('stop_number') as $stop)
+                <li>{{ $stop->address }} · {{ $stop->recipient_name }} · {{ $stop->recipient_phone }}</li>
+            @empty
+                <li>{{ $deliveryCopy->delivery_address }}</li>
+            @endforelse
+        </ol>
+    @endempty
 
     <div class="footer">
         {{ $company['name'] }} | PAN {{ $company['pan'] }} | Thank you for choosing KTM-WDC.

@@ -41,6 +41,7 @@ class PaymentController extends Controller
                           ->where('status', '!=', 'paid');
                     });
             })
+            ->where(fn ($query) => $query->whereNull('payment_method')->orWhere('payment_method', '!=', 'cod'))
             ->orderBy('created_at', 'desc')
             ->get();
         
@@ -511,9 +512,12 @@ class PaymentController extends Controller
      */
     public function bankTransferSubmit(Request $request)
     {
+        $bankNames = array_column(config('payment.banking.accounts'), 'bank_name');
+        abort_if($bankNames === [], 503, 'Bank transfers are currently unavailable.');
+
         $request->validate([
             'invoice_id' => 'required|exists:invoices,id',
-            'bank_name' => 'required|string|max:100',
+            'bank_name' => ['required', 'string', 'max:100', \Illuminate\Validation\Rule::in($bankNames)],
             'depositor_name' => 'required|string|max:150',
             'reference_number' => 'required|string|max:100',
             'transfer_date' => 'nullable|date',
@@ -526,7 +530,7 @@ class PaymentController extends Controller
 
         $voucherPath = null;
         if ($request->hasFile('voucher_file')) {
-            $voucherPath = $request->file('voucher_file')->store('payment-vouchers', 'public');
+            $voucherPath = $request->file('voucher_file')->store('payment-vouchers', 'private_uploads');
         }
 
         $transactionId = 'BANK-' . strtoupper(substr(uniqid(), -6)) . '-' . preg_replace('/[^A-Za-z0-9_-]/', '', $request->reference_number);
@@ -546,6 +550,7 @@ class PaymentController extends Controller
                 'reference_number' => $request->reference_number,
                 'transfer_date' => $request->transfer_date ?: now()->toDateString(),
                 'voucher_path' => $voucherPath,
+                'voucher_disk' => 'private_uploads',
                 'submitted_at' => now()->toIso8601String(),
             ],
         ]);
@@ -568,6 +573,8 @@ class PaymentController extends Controller
      */
     public function bankingQrSubmit(Request $request)
     {
+        abort_unless(config('payment.banking.qr.image_url'), 503, 'Banking QR is currently unavailable.');
+
         $request->validate([
             'invoice_id' => 'required|exists:invoices,id',
             'rrn_code' => 'required|string|max:100',
@@ -580,7 +587,7 @@ class PaymentController extends Controller
 
         $voucherPath = null;
         if ($request->hasFile('voucher_file')) {
-            $voucherPath = $request->file('voucher_file')->store('payment-vouchers', 'public');
+            $voucherPath = $request->file('voucher_file')->store('payment-vouchers', 'private_uploads');
         }
 
         $transactionId = 'QR-' . strtoupper(substr(uniqid(), -6)) . '-' . preg_replace('/[^A-Za-z0-9_-]/', '', $request->rrn_code);
@@ -598,6 +605,7 @@ class PaymentController extends Controller
                 'rrn_code' => $request->rrn_code,
                 'sender_bank' => $request->sender_bank ?: 'Mobile Banking App',
                 'voucher_path' => $voucherPath,
+                'voucher_disk' => 'private_uploads',
                 'merchant' => config('payment.banking.qr.merchant_name'),
                 'submitted_at' => now()->toIso8601String(),
             ],
@@ -639,6 +647,15 @@ class PaymentController extends Controller
     /**
      * Admin: Approve Bank / QR Transfer
      */
+    public function adminBankVoucher(Transaction $transaction)
+    {
+        abort_unless(in_array($transaction->payment_method, ['bank_transfer', 'banking_qr'], true), 404);
+        $path = $transaction->payment_details['voucher_path'] ?? null;
+        abort_unless(is_string($path) && str_starts_with($path, 'payment-vouchers/'), 404);
+        $disk = ($transaction->payment_details['voucher_disk'] ?? null) === 'private_uploads' ? 'private_uploads' : 'public';
+        return app(\App\Services\PrivateFileResponse::class)->send($path, diskName: $disk);
+    }
+
     public function adminApproveBankTransfer(Transaction $transaction)
     {
         $user = auth()->user();
@@ -649,7 +666,11 @@ class PaymentController extends Controller
             return redirect()->back()->with('error', 'Associated invoice not found.');
         }
 
-        $this->completeVerifiedTransaction($transaction, $invoice, $transaction->payment_method, $transaction->payment_details ?? []);
+        abort_unless(in_array($transaction->payment_method, ['bank_transfer', 'banking_qr'], true), 404);
+        $details = $transaction->payment_details ?? [];
+        $details['reviewed_by'] = $user->id;
+        $details['reviewed_at'] = now()->toIso8601String();
+        $this->completeVerifiedTransaction($transaction, $invoice, $transaction->payment_method, $details);
 
         if ($invoice->client && !empty($invoice->client->phone)) {
             try {
@@ -678,7 +699,16 @@ class PaymentController extends Controller
             'rejection_reason' => 'required|string|max:500',
         ]);
 
-        $transaction->markAsFailed($request->input('rejection_reason'));
+        abort_unless(in_array($transaction->payment_method, ['bank_transfer', 'banking_qr'], true), 404);
+        $details = $transaction->payment_details ?? [];
+        $details['reviewed_by'] = $user->id;
+        $details['reviewed_at'] = now()->toIso8601String();
+        $updated = Transaction::whereKey($transaction->id)->where('status', 'pending')->update([
+            'status' => 'failed',
+            'notes' => $request->input('rejection_reason'),
+            'payment_details' => json_encode($details, JSON_THROW_ON_ERROR),
+        ]);
+        abort_unless($updated === 1, 409, 'This transfer has already been reviewed.');
 
         return redirect()->back()->with('success', "Transaction {$transaction->transaction_id} marked as rejected.");
     }
@@ -691,6 +721,7 @@ class PaymentController extends Controller
                     ->orWhere('client_id', auth()->id());
             })
             ->where('payment_status', 'unpaid')
+            ->where(fn ($query) => $query->whereNull('payment_method')->orWhere('payment_method', '!=', 'cod'))
             ->firstOrFail();
     }
 
@@ -703,11 +734,22 @@ class PaymentController extends Controller
 
     private function completeVerifiedTransaction(Transaction $transaction, Invoice $invoice, string $method, array $details): void
     {
-        $transaction->markAsCompleted();
-        $transaction->payment_details = $details;
-        $transaction->save();
+        \Illuminate\Support\Facades\DB::transaction(function () use ($transaction, $invoice, $method, $details) {
+            $invoice->newQuery()->whereKey($invoice->id)->lockForUpdate()->firstOrFail();
+            $invoice->refresh();
+            $transaction->newQuery()->whereKey($transaction->id)->lockForUpdate()->firstOrFail();
+            $transaction->refresh();
+            abort_unless($transaction->isPending() && $invoice->payment_status === 'unpaid', 409, 'This payment has already been reviewed.');
 
-        $invoice->markAsPaid($method);
+            $connection = $transaction->getConnection();
+            if ($connection->getDriverName() === 'pgsql') {
+                // Serialize receipt allocation across invoices on the hosted PostgreSQL database.
+                $connection->select('select pg_advisory_xact_lock(?, ?)', [1264010307, 1]);
+            }
+            $transaction->payment_details = $details;
+            $transaction->markAsCompleted();
+            $invoice->markAsPaid($method);
+        });
 
         $this->adminEmailService->notifyPaymentReceived($transaction, $invoice);
         $this->sendReceipt($transaction, $invoice);

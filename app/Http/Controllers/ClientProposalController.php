@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Proposal;
+use App\Services\DriverJobAssignment;
+use Illuminate\Support\Facades\DB;
 use App\Models\WarehouseRequest;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -132,10 +134,18 @@ class ClientProposalController extends Controller
      */
     public function accept($id)
     {
-        $proposal = Proposal::where('client_id', Auth::id())
-            ->findOrFail($id);
-        
-        $proposal->accept();
+        $proposal = DB::transaction(function () use ($id) {
+            $proposal = Proposal::where('client_id', Auth::id())->lockForUpdate()->findOrFail($id);
+            abort_if($proposal->isExpired() || !$proposal->isPending(), 409, 'This quote is no longer available.');
+
+            if ($proposal->job_type === 'dispatch') {
+                app(DriverJobAssignment::class)->acceptQuote($proposal);
+            } else {
+                $proposal->accept();
+            }
+
+            return $proposal;
+        }, 3);
 
         return redirect()->route('client.proposals.show', $proposal->id)
             ->with('success', 'Proposal accepted successfully!');
@@ -168,6 +178,7 @@ class ClientProposalController extends Controller
         $proposal = Proposal::where('client_id', Auth::id())
             ->findOrFail($id);
         
+        abort_if($proposal->isExpired() || !$proposal->isPending(), 409, 'This quote is no longer available.');
         $proposal->counter($validated['counter_price'], $validated['message']);
 
         return redirect()->route('client.proposals.show', $proposal->id)
@@ -183,6 +194,7 @@ class ClientProposalController extends Controller
             ->where('status', 'negotiating')
             ->findOrFail($id);
         
+        abort_if($proposal->job_type === 'dispatch' || $proposal->isExpired(), 409, 'This counter offer is awaiting the driver or has expired.');
         $proposal->accept();
 
         return redirect()->route('client.proposals.show', $proposal->id)

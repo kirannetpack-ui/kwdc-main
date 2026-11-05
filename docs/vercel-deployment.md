@@ -15,10 +15,22 @@ The current deployment is an evaluation demo with `PHASE_ONE_DEMO=true` and `APP
 
 1. Initial migrations have been applied to the dedicated database. Do not seed demo accounts into a live business database.
 2. Connect transactional email using a verified sender and store SMTP credentials in Vercel. `MAIL_MAILER=log` does not deliver email.
-3. Connect persistent object storage and migrate both `public` and `private_uploads` disks. Several profile uploads still write directly to `public/uploads` and need conversion before enabling uploads on Vercel. Private files must remain behind the existing authorized download controller.
-4. Configure payment merchant credentials and dedicated routing/geocoding services, then run `php artisan app:production-preflight`.
+3. Set `UPLOADS_DRIVER=s3` and configure `R2_ENDPOINT`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_PUBLIC_BUCKET`, `R2_PRIVATE_BUCKET`, and `R2_PUBLIC_URL`. Copy existing objects to the corresponding bucket using their existing keys before switching. Move legacy payment vouchers from public storage to the private bucket and update their stored disk marker. Keep the private bucket inaccessible over public HTTP. Test warehouse documents and public images separately.
+4. Enter verified bank or merchant QR details using the fields in `.env.production.example`, then enable only the payment methods that have been verified. Configure production routing and geocoding services and run `php artisan app:production-preflight`. Khalti and eSewa remain optional.
 5. Host queue workers, the every-minute scheduler, and Reverb on a persistent worker service if these features are enabled. Vercel functions do not run these persistent processes.
 6. Create the initial administrator securely, complete login/email/document/payment checks, and set `APP_LAUNCH_READY=true` in Vercel before redeploying.
+
+A non-demo Vercel deployment with launch enabled runs preflight and rejects a database containing demo accounts. Use a separate production database. Preflight checks configuration; staging must also verify storage access, document permissions, real email delivery, payment reconciliation, and scheduled work.
+
+### Direct uploads and private downloads
+
+Enable `DIRECT_UPLOADS_ENABLED=true` with the R2 disks. On the private bucket, allow CORS `PUT` from the exact application origin, including the staging origin during evaluation, with `Content-Type` allowed. Add a lifecycle rule for the `staged-uploads/` prefix only. The application signs uploads for ten minutes and deletes consumed staging objects. A lifecycle expiration of one day clears abandoned uploads.
+
+Warehouse forms send files to R2 before submitting references to Laravel. The existing controller still validates file type, size and required fields, then saves photos and documents to their respective disks. Test a multipart warehouse submission with a document over 4.5 MB and test a private download in staging with actual R2 credentials.
+
+### Scheduled workflow gaps
+
+The schedule references `shipments:update-status`, `invoices:send-reminders` and `drivers:verify-documents` without registered implementations. Production preflight flags them when checking launch readiness. The two commands named `warehouse:billing` also need consolidation after confirming recurring charges, reminders and expiry handling. Verify these behaviors and the worker and scheduler deployment before launch.
 
 The project uses encrypted secure database sessions and a database cache, preserving shared rate limits across function instances. The evaluation deployment uses Neon's direct connection with native prepared statements (`DB_USE_DIRECT=true`, `DB_POOLED=false`); this avoids incompatible boolean binding with emulated prepares in Laravel 12. Schema changes also use the direct connection. The function runs in Singapore alongside the database.
 

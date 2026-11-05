@@ -30,7 +30,21 @@ class PdfController extends Controller
 
         abort_unless($this->canDownloadDispatch($dispatch), 403);
 
-        $pdf = Pdf::loadView('pdf.dispatch', compact('dispatch'));
+        $hideTransportAmounts = !Auth::user()->isAdmin() && $dispatch->driver_id === Auth::id();
+
+        $invoice = $hideTransportAmounts && $dispatch->invoice_no
+            ? $dispatch->deliveryInvoice()->where('invoice_number', $dispatch->invoice_no)->first()
+            : null;
+
+        if ($invoice) {
+            return Pdf::loadView('pdf.invoice', [
+                'invoice' => $invoice,
+                'company' => config('company'),
+                'deliveryCopy' => $dispatch,
+            ])->download("Delivery_{$invoice->invoice_number}.pdf");
+        }
+
+        $pdf = Pdf::loadView('pdf.dispatch', compact('dispatch', 'hideTransportAmounts'));
         return $pdf->download("Dispatch_{$dispatch->tracking_id}.pdf");
     }
 

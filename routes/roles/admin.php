@@ -98,6 +98,7 @@ Route::prefix('admin')->middleware(['admin'])->name('admin.')->group(function ()
 
     // Bank & QR Payments Reconciliation
     Route::get('/payments/bank-transfers', [\App\Http\Controllers\PaymentController::class, 'adminBankTransfers'])->name('payments.bank-transfers');
+    Route::get('/payments/bank-transfers/{transaction}/voucher', [\App\Http\Controllers\PaymentController::class, 'adminBankVoucher'])->name('payments.bank-transfers.voucher');
     Route::post('/payments/bank-transfers/{transaction}/approve', [\App\Http\Controllers\PaymentController::class, 'adminApproveBankTransfer'])->name('payments.bank-transfers.approve');
     Route::post('/payments/bank-transfers/{transaction}/reject', [\App\Http\Controllers\PaymentController::class, 'adminRejectBankTransfer'])->name('payments.bank-transfers.reject');
 
@@ -137,6 +138,7 @@ Route::prefix('admin')->middleware(['admin'])->name('admin.')->group(function ()
         Route::get('/agencies', [SecurityAgencyController::class, 'index'])->name('agencies');
         Route::get('/agencies/{agency}', [SecurityAgencyController::class, 'show'])->name('agency.show');
         Route::post('/agencies/{agency}/approve', [SecurityAgencyController::class, 'approve'])->name('agency.approve');
+        Route::post('/agencies/{agency}/warehouse-access', [SecurityAgencyController::class, 'warehouseAccess'])->name('agency.warehouse-access');
         Route::post('/agencies/{agency}/reject', [SecurityAgencyController::class, 'reject'])->name('agency.reject');
         Route::get('/agencies/{agency}/export', [SecurityAgencyController::class, 'export'])->name('agency.export');
 

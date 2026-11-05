@@ -15,6 +15,7 @@
         "laravel/sanctum": "^4.3",
         "laravel/tinker": "^2.11",
         "laravel/ui": "^4.6",
+        "league/flysystem-aws-s3-v3": "^3.0",
         "openai-php/client": "^0.20.1",
         "simplesoftwareio/simple-qrcode": "^4.2",
         "symfony/google-mailer": "^7.4",

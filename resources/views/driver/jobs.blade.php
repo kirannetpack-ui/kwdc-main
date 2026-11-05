@@ -107,6 +107,10 @@
                                     @csrf
                                     <button type="submit" class="px-2 py-0.5 rounded-md bg-orange-500 hover:bg-orange-600 text-white font-semibold text-[10.5px] transition shadow-2xs">Accept</button>
                                 </form>
+                        <form action="{{ route('driver.jobs.reject', $job->id) }}" method="POST" class="inline">
+                            @csrf
+                            <button type="submit" class="px-2 py-1 text-xs font-semibold">Decline</button>
+                        </form>
                             </td>
                         </tr>
                         @endforeach
@@ -143,7 +147,7 @@
                     </thead>
                     <tbody class="divide-y divide-slate-100">
                         @foreach($activeJobs as $job)
-                        <tr class="hover:bg-slate-50/70 transition">
+                        <tr class="hover:bg-slate-50/70 transition" data-location-url="{{ route('dispatch.update-location', $job->id, false) }}">
                             <td class="font-bold text-slate-900 font-mono truncate">#{{ $job->id }}</td>
                             <td class="font-semibold text-slate-800 truncate" title="{{ $job->client->name ?? 'N/A' }}">{{ $job->client->name ?? 'N/A' }}</td>
                             <td class="text-slate-600 truncate" title="{{ $job->pickup_address ?? 'N/A' }}">{{ $job->pickup_address ?? 'N/A' }}</td>
@@ -151,14 +155,21 @@
                                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold border {{ $job->status === 'assigned' ? 'bg-sky-50 text-sky-700 border-sky-200' : 'bg-amber-50 text-amber-700 border-amber-200' }}">
                                     {{ ucfirst(str_replace('_', ' ', $job->status)) }}
                                 </span>
+                                <small class="block" data-location-status role="status"></small>
                             </td>
                             <td class="font-extrabold text-slate-900 truncate">रु {{ number_format($job->driver_earning ?? 0) }}</td>
                             <td class="text-right">
                                 <div class="inline-flex items-center justify-end gap-1">
+                                    @if($job->deliveryInvoice)
+                                        <a href="{{ route('dispatch.pdf', $job->id) }}">Delivery copy</a>
+                                        @if($job->deliveryInvoice?->payment_method === 'cod' && $job->deliveryInvoice->payment_status === 'unpaid')
+                                            <span>Collect NPR {{ number_format($job->deliveryInvoice->grand_total, 2) }}</span>
+                                        @endif
+                                    @endif
                                     @if($job->status == 'assigned')
                                         <form action="{{ route('driver.jobs.start', $job->id) }}" method="POST" class="inline">
                                             @csrf
-                                            <button type="submit" class="px-2 py-0.5 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-[10.5px] transition shadow-2xs">Start</button>
+                                            <button type="submit" class="px-2 py-0.5 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-[10.5px] transition shadow-2xs">Mark picked up</button>
                                         </form>
                                     @endif
                                     @if($job->status == 'picked_up' || $job->status == 'on_the_way')
@@ -320,3 +331,9 @@
     }
 </style>
 @endpush
+
+@once
+@push('scripts')
+<script src="{{ asset('js/driver-job-location.js') }}" defer></script>
+@endpush
+@endonce

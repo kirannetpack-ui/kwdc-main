@@ -130,7 +130,7 @@
                         <!-- Proof / Voucher -->
                         <td class="py-3 px-3">
                             @if(!empty($details['voucher_path']))
-                                <a href="{{ asset('storage/' . $details['voucher_path']) }}" target="_blank" class="inline-flex items-center gap-1 px-2 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-semibold transition border border-slate-200">
+                                <a href="{{ route('admin.payments.bank-transfers.voucher', $tx) }}" target="_blank" class="inline-flex items-center gap-1 px-2 py-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-semibold transition border border-slate-200">
                                     <i class="fas fa-paperclip text-slate-500"></i> View Slip
                                 </a>
                             @else

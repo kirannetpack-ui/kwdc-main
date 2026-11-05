@@ -11,12 +11,14 @@ Route::prefix('driver')->middleware('role:driver')->name('driver.')->group(funct
     Route::get('/jobs', [DriverController::class, 'jobs'])->name('jobs');
     Route::get('/available-jobs', [DriverController::class, 'availableJobs'])->name('available-jobs');
     Route::post('/jobs/{id}/accept', [DriverController::class, 'accept'])->name('jobs.accept');
+    Route::post('/jobs/{id}/reject', [DriverController::class, 'reject'])->name('jobs.reject');
     Route::post('/jobs/{id}/start', [DriverController::class, 'start'])->name('jobs.start');
     Route::post('/jobs/{id}/deliver', [DriverController::class, 'deliver'])->name('jobs.deliver');
     Route::post('/jobs/{id}/cancel', [DriverController::class, 'cancel'])->name('jobs.cancel');
     Route::post('/jobs/{order}/proof', [DriverController::class, 'uploadProof'])->name('jobs.proof');
     Route::get('/pickups', [DriverController::class, 'pickupJobs'])->name('pickups');
     Route::post('/pickups/{id}/accept', [DriverController::class, 'acceptPickup'])->name('accept-pickup');
+    Route::post('/pickups/{id}/reject', [DriverController::class, 'rejectPickup'])->name('reject-pickup');
     Route::post('/pickups/{id}/start', [DriverController::class, 'startPickup'])->name('start-pickup');
     Route::post('/pickups/{id}/complete', [DriverController::class, 'completePickup'])->name('complete-pickup');
     Route::post('/pickups/{id}/cancel', [DriverController::class, 'cancelPickup'])->name('cancel-pickup');

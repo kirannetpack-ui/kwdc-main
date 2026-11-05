@@ -27,6 +27,11 @@ class BankingPaymentTest extends TestCase
         parent::setUp();
 
         Storage::fake('public');
+        Storage::fake('private_uploads');
+        config([
+            'payment.banking.accounts' => [['bank_name' => 'Nabil Bank Ltd.']],
+            'payment.banking.qr.image_url' => 'https://example.test/merchant-qr.png',
+        ]);
 
         $this->admin = User::factory()->create([
             'role' => 'admin',
@@ -97,6 +102,11 @@ class BankingPaymentTest extends TestCase
         $this->assertEquals('Nabil Bank Ltd.', $transaction->payment_details['bank_name']);
         $this->assertEquals('NBL-TXN-9840124', $transaction->payment_details['reference_number']);
         $this->assertNotNull($transaction->payment_details['voucher_path']);
+        Storage::disk('private_uploads')->assertExists($transaction->payment_details['voucher_path']);
+        Storage::disk('public')->assertMissing($transaction->payment_details['voucher_path']);
+        $url = route('admin.payments.bank-transfers.voucher', $transaction);
+        $this->get($url)->assertForbidden();
+        $this->actingAs($this->admin)->get($url)->assertOk()->assertDownload();
     }
 
     public function test_demo_transfer_is_simulated_owned_and_idempotent(): void

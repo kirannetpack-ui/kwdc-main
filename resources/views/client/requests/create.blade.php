@@ -99,6 +99,25 @@
         </div>
         
         <!-- Warehouse Details Card -->
+        <section class="bg-white rounded-xl shadow-md p-6">
+            <h2 class="text-lg font-semibold">Warehouse space availability</h2>
+            <p>Future dates are estimates. Submitting a request does not reserve space.</p>
+            <ul class="mt-3 space-y-3">
+                @foreach($warehouses as $warehouse)
+                    @php($space = $availabilityByWarehouse[$warehouse->id])
+                    <li>
+                        <strong>{{ $warehouse->name }}</strong> · {{ number_format($space['available'], 2) }} sq ft available now
+                        @foreach($space['expiries'] as $date)
+                            <div>Agreement ends {{ $date }} ({{ (int) today()->diffInDays(\Illuminate\Support\Carbon::parse($date)) }} days left)</div>
+                        @endforeach
+                        @foreach($space['upcoming'] as $date => $area)
+                            <div>{{ number_format($area, 2) }} sq ft open for pre-booking from {{ $date }}.</div>
+                        @endforeach
+                    </li>
+                @endforeach
+            </ul>
+        </section>
+
         <div id="warehouse_details" class="bg-white rounded-xl shadow-md p-6 hidden">
             <h3 class="text-lg font-bold text-gray-800 mb-4">2. Warehouse Details</h3>
             <div id="warehouse_info"></div>

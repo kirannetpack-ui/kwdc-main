@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    @if(config('filesystems.direct_uploads') && ! config('kwdc.demo'))
+        <meta name="kwdc-upload-stage" content="{{ route('uploads.stage') }}">
+        <script src="{{ asset('js/kwdc-direct-uploads.js') }}" defer></script>
+    @endif
     <meta name="user-id" content="{{ auth()->check() ? auth()->id() : '' }}">
     <meta name="theme-color" content="#f97316">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -506,7 +510,7 @@
             <div class="dropdown">
                 <a href="#" class="kwdc-topbar-profile" id="userMenuToggle" data-bs-toggle="dropdown" aria-expanded="false">
                     @if(auth()->user()->profile_photo)
-                        <img src="{{ asset(auth()->user()->profile_photo) }}" class="kwdc-topbar-avatar" alt="Avatar">
+                        <img src="{{ auth()->user()->profile_photo_url }}" class="kwdc-topbar-avatar" alt="Avatar">
                     @else
                         <div class="kwdc-topbar-avatar">
                             {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}

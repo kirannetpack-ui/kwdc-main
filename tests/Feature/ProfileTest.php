@@ -114,6 +114,7 @@ class ProfileTest extends TestCase
         $response->assertSessionHasNoErrors()->assertRedirect('/profile');
         $user->refresh();
         $this->assertNotNull($user->profile_photo);
-        $this->assertStringContainsString('uploads/avatars/avatar_', $user->profile_photo);
+        \Illuminate\Support\Facades\Storage::disk('public')->assertExists($user->profile_photo);
+        $this->assertSame(\Illuminate\Support\Facades\Storage::disk('public')->url($user->profile_photo), $user->profile_photo_url);
     }
 }

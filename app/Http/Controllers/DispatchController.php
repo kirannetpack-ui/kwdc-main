@@ -11,6 +11,7 @@ use App\Models\Warehouse;
 use App\Models\WarehouseRequest;
 use App\Models\Stock;
 use App\Events\OrderDelivered;
+use App\Services\DriverJobAssignment;
 use App\Events\LocationUpdated;
 use App\Services\NotificationService;
 use Illuminate\Http\Request;
@@ -128,6 +129,7 @@ class DispatchController extends Controller
             'pickup_latitude' => 'nullable|numeric|between:-90,90',
             'pickup_longitude' => 'nullable|numeric|between:-180,180',
             'bill_type' => 'nullable|string',
+            'payment_method' => 'nullable|in:cod,online',
             'pan_number' => 'nullable|string|max:50',
         ]);
 
@@ -151,7 +153,7 @@ class DispatchController extends Controller
 
             $dispatch = DispatchOrder::create([
                 'client_id' => $clientId,
-                'driver_id' => $request->driver_id,
+                'payment_method' => $request->input('payment_method'),
                 'pickup_address' => $request->pickup_address,
                 'delivery_address' => $request->delivery_address ?? ($firstDeliveryStop['address'] ?? null),
                 'pickup_contact_person' => $request->pickup_contact_person,
@@ -251,6 +253,7 @@ class DispatchController extends Controller
             return redirect()->back()->withErrors($validator)->withInput();
         }
 
+
         $dispatch->update($request->only([
             'pickup_address', 'driver_id', 'total_distance', 'base_price', 'status'
         ]));
@@ -316,10 +319,7 @@ class DispatchController extends Controller
             'longitude' => 'required|numeric|between:-180,180',
         ]);
 
-        $dispatch->current_latitude = $request->latitude;
-        $dispatch->current_longitude = $request->longitude;
-        $dispatch->last_location_update = now();
-        $dispatch->save();
+        abort_unless(in_array($dispatch->status, DriverJobAssignment::ACTIVE_STATUSES, true) && $dispatch->driver_id, 409);
 
         $eta = null;
         if ($dispatch->delivery_lat && $dispatch->delivery_lng) {
@@ -329,12 +329,20 @@ class DispatchController extends Controller
                 $dispatch->delivery_lat,
                 $dispatch->delivery_lng
             );
-            $avgSpeed = 30;
-            $timeInHours = $distance / $avgSpeed;
-            $eta = now()->addHours($timeInHours);
-            $dispatch->estimated_arrival = $eta;
-            $dispatch->save();
+            $eta = now()->addMinutes((int) round($distance * 2));
         }
+
+        $updated = DispatchOrder::whereKey($dispatch->id)
+            ->where('driver_id', $dispatch->driver_id)
+            ->whereIn('status', DriverJobAssignment::ACTIVE_STATUSES)
+            ->update([
+                'current_latitude' => $request->latitude,
+                'current_longitude' => $request->longitude,
+                'last_location_update' => now(),
+                'estimated_arrival' => $eta,
+            ]);
+
+        abort_unless($updated, 409);
 
         broadcast(new LocationUpdated($dispatch->id, $request->latitude, $request->longitude, $eta));
 
@@ -353,11 +361,15 @@ class DispatchController extends Controller
         $oldStatus = $dispatch->status;
         $status = $request->status;
 
+
         if (!in_array($status, ['pending', 'in_progress', 'delivered', 'cancelled'])) {
             return response()->json(['error' => 'Invalid status'], 400);
         }
 
         $dispatch->status = $status;
+        if (!in_array($status, DriverJobAssignment::ACTIVE_STATUSES, true)) {
+            $dispatch->tracking_enabled = false;
+        }
 
         if ($status === 'delivered') {
             $dispatch->delivered_at = now();
@@ -425,6 +437,22 @@ class DispatchController extends Controller
             'tracking_token' => $dispatch->tracking_token,
             'tracking_url' => $this->trackingUrl($dispatch),
         ]);
+    }
+
+    public function trackingPosition(Request $request, $id)
+    {
+        $dispatch = DispatchOrder::findOrFail($id);
+        abort_unless($this->canTrackDispatch($dispatch, $request), 403);
+
+        $active = $dispatch->tracking_enabled && $dispatch->driver_id
+            && in_array($dispatch->status, DriverJobAssignment::ACTIVE_STATUSES, true);
+
+        return response()->json([
+            'active' => (bool) $active,
+            'latitude' => $active ? $dispatch->current_latitude : null,
+            'longitude' => $active ? $dispatch->current_longitude : null,
+            'updated_at' => $active ? $dispatch->last_location_update : null,
+        ])->header('Cache-Control', 'private, no-store');
     }
 
     public function track(Request $request, $id)

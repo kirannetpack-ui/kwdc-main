@@ -157,9 +157,7 @@ class StockController extends Controller
             ->firstOrFail();
         
         if (Storage::disk('public')->exists($stock->qr_code_path)) {
-            $file = Storage::disk('public')->path($stock->qr_code_path);
-            $mimeType = Storage::disk('public')->mimeType($stock->qr_code_path);
-            return response()->file($file, ['Content-Type' => $mimeType]);
+            return Storage::disk('public')->response($stock->qr_code_path);
         }
         
         return redirect()->back()->with('error', 'QR Code not found.');
@@ -198,7 +196,7 @@ class StockController extends Controller
         }
         
         if ($path && Storage::disk('private_uploads')->exists($path)) {
-            return Storage::disk('private_uploads')->download($path);
+            return app(\App\Services\PrivateFileResponse::class)->send($path);
         }
         
         return redirect()->back()->with('error', 'Document not found.');

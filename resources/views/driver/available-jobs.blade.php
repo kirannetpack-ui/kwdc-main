@@ -137,7 +137,6 @@
                     </div>
 
                     <div class="flex items-center gap-2">
-                        @if($rate > 0)
                         <form action="{{ route('driver.jobs.accept', $job->id) }}" method="POST" onsubmit="return confirm('Confirm accepting this dispatch route?');">
                             @csrf
                             <button type="submit" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-xs transition">
@@ -145,7 +144,10 @@
                                 <span>Accept Job</span>
                             </button>
                         </form>
-                        @endif
+                        <form action="{{ route('driver.jobs.reject', $job->id) }}" method="POST" class="inline">
+                            @csrf
+                            <button type="submit" class="px-2 py-1 text-xs font-semibold">Decline</button>
+                        </form>
 
                         <button type="button" 
                                 onclick="openProposalModal({{ $job->id }}, '{{ $job->dispatch_number ?? ('DSP-' . $job->id) }}', {{ $rate }})"
@@ -258,4 +260,25 @@ document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') closeProposalModal();
 });
 </script>
+
+@if($availablePickups->isNotEmpty())
+    <section class="mt-6 space-y-3">
+        <h2 class="text-lg font-semibold">Available pickups</h2>
+        @foreach($availablePickups as $pickup)
+            <div class="flex flex-wrap items-center gap-3 rounded-xl border bg-white p-4">
+                <span>{{ $pickup->tracking_id }}</span>
+                <span>{{ $pickup->notes }}</span>
+                <form action="{{ route('driver.accept-pickup', $pickup) }}" method="POST">
+                    @csrf
+                    <button class="btn btn-primary" type="submit">Accept pickup</button>
+                </form>
+                <form action="{{ route('driver.reject-pickup', $pickup) }}" method="POST">
+                    @csrf
+                    <button class="btn btn-outline-secondary" type="submit">Decline</button>
+                </form>
+            </div>
+        @endforeach
+        {{ $availablePickups->links() }}
+    </section>
+@endif
 @endsection

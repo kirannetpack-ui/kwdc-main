@@ -23,6 +23,7 @@ class InvoiceServiceTest extends TestCase
     public function test_dispatch_invoice_generation_populates_required_payable_fields_and_pdf(): void
     {
         Storage::fake('public');
+        Storage::fake('private_uploads');
 
         $client = User::factory()->create(['role' => 'client']);
         $warehouse = Warehouse::factory()->create();
@@ -53,20 +54,22 @@ class InvoiceServiceTest extends TestCase
         $this->assertSame('1130.00', $invoice->amount);
         $this->assertSame('unpaid', $invoice->payment_status);
 
-        Storage::disk('public')->assertExists('invoices/pdfs/' . $invoice->invoice_number . '.pdf');
+        Storage::disk('private_uploads')->assertExists('invoices/pdfs/' . $invoice->invoice_number . '.pdf');
+        Storage::disk('public')->assertMissing('invoices/pdfs/' . $invoice->invoice_number . '.pdf');
     }
 
     public function test_invoice_pdf_view_renders_for_download_and_email_flows(): void
     {
         Storage::fake('public');
+        Storage::fake('private_uploads');
 
         $invoice = $this->invoiceFor(User::factory()->create(['role' => 'client']), 2500);
 
         $pdfPath = app(InvoiceService::class)->generateAndStorePDF($invoice);
 
         $this->assertSame('invoices/pdfs/' . $invoice->invoice_number . '.pdf', $pdfPath);
-        Storage::disk('public')->assertExists($pdfPath);
-        $this->assertGreaterThan(1000, strlen(Storage::disk('public')->get($pdfPath)));
+        Storage::disk('private_uploads')->assertExists($pdfPath);
+        $this->assertGreaterThan(1000, strlen(Storage::disk('private_uploads')->get($pdfPath)));
     }
 
     public function test_professional_payment_receipt_attaches_transaction_pdf(): void
@@ -116,6 +119,29 @@ class InvoiceServiceTest extends TestCase
             });
 
         app(ProfessionalEmailService::class)->sendPaymentReceipt($user, $transaction, $pdf);
+    }
+
+    public function test_warehouse_prepayment_reminders_only_send_once_at_seven_days(): void
+    {
+        \Illuminate\Support\Facades\Mail::fake();
+        $client = User::factory()->create();
+        $due = $this->invoiceFor($client, 1000);
+        $this->invoiceFor($client, 2000)->update(['order_type' => 'dispatch']);
+        $this->invoiceFor($client, 3000)->markAsPaid();
+        $this->invoiceFor($client, 4000)->update(['payment_due_date' => today()->addDays(8)]);
+        $legacy = $this->invoiceFor($client, 5000);
+        $legacy->update(['payment_due_date' => null]);
+
+        $this->artisan('invoices:send-reminders')->assertSuccessful();
+        $this->artisan('invoices:send-reminders')->assertSuccessful();
+
+        \Illuminate\Support\Facades\Mail::assertSent(\App\Mail\InvoiceDueReminder::class, 2);
+        foreach ([$due, $legacy] as $invoice) {
+            \Illuminate\Support\Facades\Mail::assertSent(
+                \App\Mail\InvoiceDueReminder::class,
+                fn ($mail) => $mail->hasTo($client->email) && $mail->invoice->is($invoice)
+            );
+        }
     }
 
     private function invoiceFor(User $user, float $amount): Invoice

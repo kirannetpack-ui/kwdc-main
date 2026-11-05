@@ -52,7 +52,7 @@
                 </span>
             </div>
             <h1 class="text-2xl sm:text-3xl font-serif font-bold text-[#24201D] tracking-tight" style="font-family: 'Newsreader', Georgia, serif;">Create New Dispatch</h1>
-            <p class="text-sm text-[#645D56] mt-0.5">Map multi-stop highway routes, estimate fair pricing with AI, and assign verified drivers.</p>
+            <p class="text-sm text-[#645D56] mt-0.5">Map multi-stop highway routes, estimate fair pricing with AI, and publish jobs to available drivers.</p>
         </div>
         <div>
             <a href="{{ route('dispatch.index') }}" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-[#24201D] bg-[#FFFDF9] border border-[#E8E2D8] hover:bg-[#FAF8F5] transition shadow-2xs">
@@ -229,6 +229,13 @@
                                 <option value="vat">VAT Registered</option>
                                 <option value="pan">PAN Number</option>
                             </select>
+                    <label class="block mt-3">Agreed payment method
+                        <select name="payment_method" class="w-full px-4 py-2 border rounded-lg">
+                            <option value="">To be agreed</option>
+                            <option value="cod" @selected(old('payment_method') === 'cod')>Cash on delivery</option>
+                            <option value="online" @selected(old('payment_method') === 'online')>Online payment</option>
+                        </select>
+                    </label>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-2">PAN Number (if applicable)</label>
@@ -315,7 +322,7 @@
                     <div class="flex justify-between items-center mb-4">
                         <h3 class="text-lg font-bold flex items-center">
                             <i class="fas fa-truck text-orange-500 mr-2"></i>
-                            Select Driver
+                            Compare driver rate estimates
                         </h3>
                         <button type="button" id="findDriversBtn" class="text-sm bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-lg transition">
                             <i class="fas fa-robot mr-1"></i> AI Recommend
@@ -371,7 +378,7 @@
                         @endif
                     </div>
                     
-                    <input type="hidden" id="selected_driver_id" name="driver_id" value="">
+                    <input type="hidden" id="selected_driver_id" value="">
                 </div>
 
                 <!-- AI Route & Fleet Advisor Card -->
@@ -725,7 +732,7 @@ function selectDriver(element, driverId, driverName, price) {
     selectedDriversPrice = price;
     
     updatePriceSummary();
-    showToast('Driver selected: ' + driverName, 'success');
+    showToast('Rate estimate selected: ' + driverName, 'success');
 }
 
 function selectWarehouse(element) {
@@ -979,7 +986,6 @@ document.getElementById('dispatchForm').addEventListener('submit', async functio
     e.preventDefault();
     
     const pickupAddress = document.getElementById('pickup_address').value;
-    const driverId = document.getElementById('selected_driver_id').value;
     const stops = document.querySelectorAll('.stop-card');
     
     if (!pickupAddress) {

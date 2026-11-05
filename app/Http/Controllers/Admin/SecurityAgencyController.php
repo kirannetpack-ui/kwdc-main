@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\SecurityAgency;
+use App\Models\Warehouse;
 use App\Mail\AgencyApprovedMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
@@ -22,7 +23,24 @@ class SecurityAgencyController extends Controller
     public function show(SecurityAgency $agency)
     {
         $agency->load(['user', 'personnel', 'goods', 'rates']);
-        return view('admin.security.agency-detail', compact('agency'));
+        $warehouses = Warehouse::where('status', 'approved')->orderBy('name')->get();
+        $authorizedIds = $agency->authorizedWarehouses()->pluck('warehouses.id');
+        return view('admin.security.agency-detail', compact('agency', 'warehouses', 'authorizedIds'));
+    }
+
+    public function warehouseAccess(Request $request, SecurityAgency $agency)
+    {
+        abort_unless($agency->status === 'approved', 409);
+        $data = $request->validate([
+            'warehouse_ids' => 'sometimes|array',
+            'warehouse_ids.*' => 'integer|distinct|exists:warehouses,id,status,approved',
+        ]);
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($agency, $data) {
+            SecurityAgency::lockForUpdate()->findOrFail($agency->id)->authorizedWarehouses()->sync($data['warehouse_ids'] ?? []);
+        });
+
+        return back()->with('success', 'Warehouse authorizations updated.');
     }
 
     public function approve(SecurityAgency $agency)

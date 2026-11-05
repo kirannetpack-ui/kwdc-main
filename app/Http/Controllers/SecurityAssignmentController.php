@@ -75,18 +75,22 @@ class SecurityAssignmentController extends Controller
     public function create()
     {
         $agency = $this->getAgency();
+        abort_unless($agency->status === 'approved', 403, 'Your agency must be approved before creating assignments.');
 
         $personnel = $agency->personnel()
             ->where('status', 'active')
             ->pluck('name', 'id');
 
-        $warehouses = Warehouse::pluck('name', 'id');
+        $warehouses = $agency->serviceableWarehouses()->pluck('name', 'id');
 
         return view('security.assignments.create', compact('personnel', 'warehouses'));
     }
 
     public function store(Request $request)
     {
+        $agency = $this->getAgency();
+        abort_unless($agency->status === 'approved', 403, 'Your agency must be approved before creating assignments.');
+
         $validated = $request->validate([
             'warehouse_id'  => 'required|exists:warehouses,id',
             'personnel_id'  => 'nullable|exists:security_personnels,id',
@@ -101,7 +105,6 @@ class SecurityAssignmentController extends Controller
         ]);
 
         if (!empty($validated['personnel_id'])) {
-            $agency = $this->getAgency();
             $belongsToAgency = $agency->personnel()
                 ->where('id', $validated['personnel_id'])
                 ->exists();
@@ -111,7 +114,8 @@ class SecurityAssignmentController extends Controller
             }
         }
 
-        $agency = $this->getAgency();
+        abort_unless($agency->status === 'approved' && $agency->serviceableWarehouses()->whereKey($validated['warehouse_id'])->exists(), 403);
+
         $assignment = $agency->assignments()->create($validated);
 
         $this->notifyAgency(
@@ -139,7 +143,7 @@ class SecurityAssignmentController extends Controller
         $personnel = $agency->personnel()
             ->where('status', 'active')
             ->pluck('name', 'id');
-        $warehouses = Warehouse::pluck('name', 'id');
+        $warehouses = $agency->serviceableWarehouses()->pluck('name', 'id');
 
         return view('security.assignments.edit', compact('assignment', 'personnel', 'warehouses'));
     }
@@ -170,6 +174,8 @@ class SecurityAssignmentController extends Controller
                 return back()->withErrors(['personnel_id' => 'Selected personnel does not belong to your agency.']);
             }
         }
+
+        abort_unless($agency->status === 'approved' && $agency->serviceableWarehouses()->whereKey($validated['warehouse_id'])->exists(), 403);
 
         $assignment->update($validated);
 

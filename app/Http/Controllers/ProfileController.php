@@ -53,17 +53,11 @@ class ProfileController extends Controller
         ]));
 
         if ($request->hasFile('profile_photo')) {
-            $file = $request->file('profile_photo');
-            $filename = 'avatar_' . $user->id . '_' . time() . '.' . $file->getClientOriginalExtension();
-            $dest = public_path('uploads/avatars');
-            if (!file_exists($dest)) {
-                mkdir($dest, 0755, true);
+            $path = $request->file('profile_photo')->store('avatars', 'public');
+            if (! $path) {
+                return back()->withErrors(['profile_photo' => 'The photo could not be saved. Please try again.']);
             }
-            if ($user->profile_photo && file_exists(public_path($user->profile_photo))) {
-                @unlink(public_path($user->profile_photo));
-            }
-            $file->move($dest, $filename);
-            $user->profile_photo = 'uploads/avatars/' . $filename;
+            $user->profile_photo = $path;
         }
 
         if ($request->filled('password')) {

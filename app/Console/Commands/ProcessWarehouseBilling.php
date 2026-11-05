@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Mail;
 
 class ProcessWarehouseBilling extends Command
 {
-    protected $signature = 'warehouse:billing';
+    protected $signature = 'warehouse:legacy-billing';
     protected $description = 'Generate monthly invoices, send reminders, and handle expired contracts';
 
     public function handle()

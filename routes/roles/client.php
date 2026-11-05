@@ -14,6 +14,7 @@ Route::prefix('my-requests')->name('my-requests.')->group(function () {
     Route::get('/create', [ClientRequestHandler::class, 'create'])->name('create');
     Route::post('/', [ClientRequestHandler::class, 'store'])->name('store');
     Route::get('/{id}', [ClientRequestHandler::class, 'show'])->name('show');
+    Route::post('/{id}/renewal', [ClientRequestHandler::class, 'renewal'])->name('renewal');
 });
 
 // ==================== CLIENT ZONE ====================
@@ -57,6 +58,7 @@ Route::prefix('equipment-requests')->name('equipment-requests.')->group(function
     Route::put('/{id}', [EquipmentRequestController::class, 'update'])->name('update');
     Route::delete('/{id}', [EquipmentRequestController::class, 'destroy'])->name('destroy');
     Route::post('/{id}/approve', [EquipmentRequestController::class, 'approve'])->name('approve');
+    Route::post('/{id}/accept-quote', [EquipmentRequestController::class, 'acceptQuote'])->name('accept-quote');
     Route::post('/{id}/reject', [EquipmentRequestController::class, 'reject'])->name('reject');
     Route::post('/{id}/fulfill', [EquipmentRequestController::class, 'fulfill'])->name('fulfill');
     Route::post('/{id}/return', [EquipmentRequestController::class, 'return'])->name('return');

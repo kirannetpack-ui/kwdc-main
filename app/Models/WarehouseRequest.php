@@ -37,6 +37,30 @@ class WarehouseRequest extends Model
         'contract_expires_at',
     ];
     
+    public function agreementEnd(): ?\Carbon\CarbonInterface
+    {
+        $end = $this->contract_end_date ?? $this->contract_expires_at;
+        return $end ? \Illuminate\Support\Carbon::parse($end)->startOfDay() : null;
+    }
+
+    public function renewalDeadline(): ?\Carbon\CarbonInterface
+    {
+        return $this->agreementEnd()?->copy()->subMonthNoOverflow();
+    }
+
+    public function renewalChoice(): ?string
+    {
+        return $this->renewal_decided_for === $this->agreementEnd()?->toDateString()
+            ? $this->renewal_decision : null;
+    }
+
+    public function isOpenForPrebooking(): bool
+    {
+        return $this->status === 'assigned' && $this->agreementEnd()
+            && ($this->renewalChoice() === 'vacate'
+                || (!$this->renewalChoice() && today()->gte($this->renewalDeadline())));
+    }
+
     protected $casts = [
         'preferred_start_date' => 'date',
         'contract_signed_at' => 'datetime',

@@ -114,7 +114,7 @@
             <input type="file" name="photo" id="photo" class="form-control">
             @if($personnel->photo)
                 <div class="mt-1">
-                    <img src="{{ asset('storage/' . $personnel->photo) }}" alt="Current Photo" width="100">
+                    <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($personnel->photo) }}" alt="Current Photo" width="100">
                     <span class="text-muted">Current photo</span>
                 </div>
             @endif

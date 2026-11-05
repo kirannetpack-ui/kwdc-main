@@ -32,7 +32,7 @@
                         <label>License Photo (leave empty to keep current)</label>
                         <input type="file" name="license_photo" accept="image/*">
                         @if($vehicle->driver_license_photo)
-                            <p class="text-sm text-gray-500 mt-1">Current: <a href="{{ asset('storage/'.$vehicle->driver_license_photo) }}" target="_blank">View</a></p>
+                            <p class="text-sm text-gray-500 mt-1">Current: <a href="{{ route('documents.private.show', ['path' => $vehicle->driver_license_photo]) }}" target="_blank">View</a></p>
                         @endif
                     </div>
                     <div class="flex justify-end space-x-2">

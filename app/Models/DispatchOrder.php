@@ -51,6 +51,11 @@ class DispatchOrder extends Model
         'delivery_kataho_grid_id',
     ];
 
+    public function deliveryInvoice()
+    {
+        return $this->hasOne(Invoice::class, 'order_id')->where('order_type', 'dispatch');
+    }
+
     protected $casts = [
         'total_distance' => 'decimal:2',
         'base_price' => 'decimal:2',

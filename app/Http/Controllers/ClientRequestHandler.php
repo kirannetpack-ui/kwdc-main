@@ -6,6 +6,9 @@ use Illuminate\Http\Request;
 use App\Models\WarehouseRequest;
 use App\Models\Stock;
 use App\Models\Warehouse;
+use App\Services\WarehouseAvailability;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class ClientRequestHandler extends Controller
 {
@@ -17,31 +20,38 @@ class ClientRequestHandler extends Controller
         return view('client.requests.index', compact('requests'));
     }
     
-    public function create()
+    public function create(WarehouseAvailability $availability)
 {
     $warehouses = Warehouse::where('status', 'approved')->get();
+    $availabilityByWarehouse = $warehouses->mapWithKeys(fn ($warehouse) => [$warehouse->id => $availability->snapshot($warehouse)]);
     
     // Get user's preferred location if exists
     $userPreferredLat = auth()->user()->preferred_latitude ?? null;
     $userPreferredLng = auth()->user()->preferred_longitude ?? null;
     
-    return view('client.requests.create', compact('warehouses', 'userPreferredLat', 'userPreferredLng'));
+    return view('client.requests.create', compact('warehouses', 'availabilityByWarehouse', 'userPreferredLat', 'userPreferredLng'));
 }
     
-    public function store(Request $request)
+    public function store(Request $request, WarehouseAvailability $availability)
     {
         $request->validate([
             'warehouse_id' => 'required|exists:warehouses,id',
             'required_area' => 'required|numeric|min:1',
             'duration_months' => 'required|integer|min:1',
             'purpose' => 'required|string',
-            'preferred_start_date' => 'nullable|date',
+            'preferred_start_date' => 'nullable|date|after_or_equal:today',
             'contact_person' => 'nullable|string|max:255',
             'contact_phone' => 'nullable|string|max:20',
             'invoice' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
             'packing_list' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
             'insurance' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
         ]);
+
+        $warehouse = Warehouse::where('status', 'approved')->findOrFail($request->warehouse_id);
+        $start = $request->filled('preferred_start_date') ? \Illuminate\Support\Carbon::parse($request->preferred_start_date)->startOfDay() : today();
+        if ((float) $request->required_area > $availability->snapshot($warehouse, $start)['available']) {
+            throw ValidationException::withMessages(['required_area' => 'This much warehouse space is unavailable on the requested start date.']);
+        }
 
         $data = [
             'client_id' => auth()->id(),
@@ -82,6 +92,26 @@ class ClientRequestHandler extends Controller
         return view('client.requests.show', compact('request'));
     }
     
+    public function renewal(Request $request, int $id)
+    {
+        $decision = $request->validate(['decision' => 'required|in:renew,vacate'])['decision'];
+
+        DB::transaction(function () use ($id, $decision) {
+            $agreement = WarehouseRequest::where('client_id', auth()->id())->lockForUpdate()->findOrFail($id);
+            $end = $agreement->agreementEnd();
+            abort_unless($agreement->status === 'assigned' && $end && today()->lt($agreement->renewalDeadline())
+                && today()->gte($end->copy()->subMonthsNoOverflow(2))
+                && !$agreement->renewalChoice(), 409, 'The renewal window is closed or your decision was already recorded.');
+
+            $agreement->forceFill([
+                'renewal_decision' => $decision,
+                'renewal_decided_for' => $end->toDateString(),
+            ])->save();
+        });
+
+        return back()->with('success', 'Your warehouse decision has been recorded.');
+    }
+
     public function myStock()
     {
         $stocks = Stock::whereHas('warehouseRequest', function($q) {

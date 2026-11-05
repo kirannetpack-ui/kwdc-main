@@ -16,7 +16,7 @@
                 <!-- Profile Photo -->
                 <div class="flex justify-center mb-6">
                     @if($user->profile_photo)
-                        <img src="{{ asset('storage/'.$user->profile_photo) }}" class="w-32 h-32 rounded-full object-cover border">
+                        <img src="{{ $user->profile_photo_url }}" class="w-32 h-32 rounded-full object-cover border">
                     @else
                         <div class="w-32 h-32 rounded-full bg-gray-200 flex items-center justify-center">
                             <i class="fas fa-user text-4xl text-gray-500"></i>
