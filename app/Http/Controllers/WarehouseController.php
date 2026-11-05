@@ -11,7 +11,6 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 use App\Services\AdminEmailService;
- use App\Services\AIService;
 
 class WarehouseController extends Controller
 {
@@ -54,47 +53,31 @@ class WarehouseController extends Controller
         return view('property.warehouses.create');
     }
 
-public function search(Request $request, AIService $aiService)
+    public function search(Request $request, \App\Services\WarehouseAvailability $availability)
     {
-        $query = $request->get('q', '');
-
-        if (empty($query)) {
-            return response()->json(['warehouses' => []]);
-        }
-
-        // 1. Let the AI parse the user's query
-        $filters = $aiService->parseWarehouseSearch($query);
-
-        // 2. Build the database query based on AI filters
-        $warehouses = Warehouse::query();
-
-        if (!empty($filters['location'])) {
-            $warehouses->where('location', 'LIKE', '%' . $filters['location'] . '%');
-        }
-
-        if (!empty($filters['min_area'])) {
-            $warehouses->where('area_sqft', '>=', $filters['min_area']);
-        }
-
-        if (!empty($filters['max_price'])) {
-            $warehouses->where('price_per_sqft', '<=', $filters['max_price']);
-        }
-
-        if (!empty($filters['facilities']) && is_array($filters['facilities'])) {
-            // Check if the 'facilities' JSON column contains the requested tags
-            foreach ($filters['facilities'] as $facility) {
-                $warehouses->whereJsonContains('facilities', $facility);
-            }
-        }
-
-        // 3. Return the results (Only show approved)
-        $results = $warehouses->where('status', 'approved')->limit(10)->get();
-
-        return response()->json([
-            'query' => $query,
-            'parsed_filters' => $filters,
-            'warehouses' => $results
+        $filters = $request->validate([
+            'q' => 'nullable|string|max:150',
+            'location' => 'nullable|string|max:150',
+            'min_area' => 'nullable|numeric|min:1',
+            'start_date' => 'nullable|date|after_or_equal:today',
+            'end_date' => 'nullable|date|after_or_equal:today'.($request->filled('start_date') ? '|after_or_equal:start_date' : ''),
         ]);
+        $filters['location'] ??= $filters['q'] ?? null;
+
+        if (!$request->expectsJson() && !$request->has('q')) {
+            return redirect()->route('my-requests.create', array_filter($filters));
+        }
+
+        $matches = $availability->search($filters)->take(30)->map(fn (Warehouse $warehouse) => [
+            'id' => $warehouse->id,
+            'name' => $warehouse->name,
+            'location' => $warehouse->location,
+            'area_sqft' => $warehouse->getTotalArea(),
+            'available_area' => $warehouse->available_area,
+            'price_per_sqft' => $warehouse->getPricePerSqft(),
+        ]);
+
+        return response()->json(['warehouses' => $matches]);
     }
 
     /**

@@ -37,6 +37,25 @@
 @endpush
 
 @section('content')
+@if(isset($warehouseAvailability))
+    <section class="mb-6 rounded-xl border border-slate-200 bg-white p-5">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+            <h2 class="text-lg font-bold">Warehouse space available today</h2>
+            <a class="text-orange-700 font-semibold" href="{{ route('my-requests.create') }}">Search warehouse availability</a>
+        </div>
+        <ul class="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            @forelse($warehouseAvailability as $warehouse)
+                <li class="rounded-lg border border-slate-100 p-3">
+                    <strong>{{ $warehouse->name }}</strong>
+                    <div>{{ $warehouse->location }} · {{ number_format($warehouse->available_area, 2) }} sq ft free</div>
+                </li>
+            @empty
+                <li>No approved warehouses currently have confirmed free space.</li>
+            @endforelse
+        </ul>
+    </section>
+@endif
+
 @php
     $user = auth()->user();
     $role = $role ?? $user->role ?? 'client';

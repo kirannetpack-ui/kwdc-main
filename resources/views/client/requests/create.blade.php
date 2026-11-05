@@ -4,6 +4,20 @@
 @section('header', 'Find Your Ideal Warehouse')
 
 @section('content')
+<form method="GET" action="{{ route('my-requests.create') }}" class="mb-6 rounded-xl border bg-white p-5">
+    <h2 class="text-lg font-semibold">Search warehouse availability</h2>
+    <div class="mt-3 flex flex-wrap items-end gap-3">
+        <label>Location or warehouse <input class="form-control" name="location" value="{{ $filters['location'] ?? '' }}"></label>
+        <label>Minimum area (sq ft) <input class="form-control" type="number" name="min_area" min="1" step="0.01" value="{{ $filters['min_area'] ?? '' }}"></label>
+        <label>Move-in <input class="form-control" type="date" name="start_date" min="{{ today()->toDateString() }}" value="{{ $filters['start_date'] ?? '' }}"></label>
+        <label>Last day needed <input class="form-control" type="date" name="end_date" min="{{ today()->toDateString() }}" value="{{ $filters['end_date'] ?? '' }}"></label>
+        <button class="btn btn-primary" type="submit">Find matching space</button>
+        @if($searching)<a href="{{ route('my-requests.create') }}">Clear filters</a>@endif
+    </div>
+    @foreach(['location', 'min_area', 'start_date', 'end_date', 'lat', 'lng', 'radius'] as $field)
+        @error($field)<p class="text-red-600">{{ $message }}</p>@enderror
+    @endforeach
+</form>
 <!-- Location Search Bar -->
 <div class="bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl p-6 mb-6 border border-orange-200">
     <div class="flex flex-col md:flex-row items-center justify-between gap-4">
@@ -107,6 +121,9 @@
                     @php($space = $availabilityByWarehouse[$warehouse->id])
                     <li>
                         <strong>{{ $warehouse->name }}</strong> · {{ number_format($space['available'], 2) }} sq ft available now
+                        @if($searching)
+                            <div>{{ number_format($warehouse->available_area, 2) }} sq ft for the search dates.</div>
+                        @endif
                         @foreach($space['expiries'] as $date)
                             <div>Agreement ends {{ $date }} ({{ (int) today()->diffInDays(\Illuminate\Support\Carbon::parse($date)) }} days left)</div>
                         @endforeach
@@ -133,7 +150,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="mb-4">
                         <label class="block text-gray-700 font-semibold mb-2">Required Area (sq ft) *</label>
-                        <input type="number" name="required_area" id="required_area" required class="w-full px-4 py-2 border rounded-lg" placeholder="Enter required area">
+                        <input type="number" name="required_area" value="{{ old('required_area', $filters['min_area'] ?? null) }}" id="required_area" required class="w-full px-4 py-2 border rounded-lg" placeholder="Enter required area">
                         <p id="area_warning" class="text-yellow-600 text-sm mt-1 hidden"></p>
                         @error('required_area') <p class="text-red-500 text-sm mt-1">{{ $message }}</p> @enderror
                     </div>
@@ -151,7 +168,7 @@
                     
                     <div class="mb-4">
                         <label class="block text-gray-700 font-semibold mb-2">Preferred Start Date</label>
-                        <input type="date" name="preferred_start_date" class="w-full px-4 py-2 border rounded-lg">
+                        <input type="date" name="preferred_start_date" value="{{ old('preferred_start_date', $filters['start_date'] ?? null) }}" class="w-full px-4 py-2 border rounded-lg">
                     </div>
                     
                     <div class="col-span-2 mb-4">

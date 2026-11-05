@@ -158,11 +158,11 @@ Route::middleware(['auth', 'account.ready', \App\Http\Middleware\HydrateDirectUp
     });
 
     // ==================== WAREHOUSES (Shared) ====================
+    Route::get('/warehouses/search', [WarehouseController::class, 'search'])->name('warehouses.search');
     Route::resource('warehouses', WarehouseController::class);
     Route::post('/save-preferred-location', [ClientRequestHandler::class, 'savePreferredLocation'])->name('save-preferred-location');
     Route::post('/warehouses/verify-kataho', [WarehouseController::class, 'verifyKataho'])->name('warehouses.verify-kataho');
     Route::post('/warehouses/get-kataho-from-coords', [WarehouseController::class, 'getKatahoFromCoords'])->name('warehouses.get-kataho-from-coords');
-    Route::get('/warehouses/search', [WarehouseController::class, 'search'])->name('warehouses.search');
 
     // ==================== STOCK ====================
     Route::prefix('stock')->name('stock.')->group(function () {

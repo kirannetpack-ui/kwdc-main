@@ -20,16 +20,26 @@ class ClientRequestHandler extends Controller
         return view('client.requests.index', compact('requests'));
     }
     
-    public function create(WarehouseAvailability $availability)
+    public function create(Request $request, WarehouseAvailability $availability)
 {
-    $warehouses = Warehouse::where('status', 'approved')->get();
-    $availabilityByWarehouse = $warehouses->mapWithKeys(fn ($warehouse) => [$warehouse->id => $availability->snapshot($warehouse)]);
-    
+    $filters = $request->validate([
+        'location' => 'nullable|string|max:150',
+        'min_area' => 'nullable|numeric|min:1',
+        'start_date' => 'nullable|date|after_or_equal:today',
+        'end_date' => 'nullable|date|after_or_equal:today'.($request->filled('start_date') ? '|after_or_equal:start_date' : ''),
+        'lat' => 'nullable|numeric|between:-90,90|required_with:lng',
+        'lng' => 'nullable|numeric|between:-180,180|required_with:lat',
+        'radius' => 'nullable|numeric|between:1,100',
+    ]);
+    $searching = collect($filters)->filter(fn ($value) => $value !== null && $value !== '')->isNotEmpty();
+    $warehouses = $availability->search($filters + ['include_unavailable' => !$searching]);
+    $availabilityByWarehouse = $warehouses->mapWithKeys(fn ($warehouse) => [$warehouse->id => $warehouse->current_availability]);
+
     // Get user's preferred location if exists
     $userPreferredLat = auth()->user()->preferred_latitude ?? null;
     $userPreferredLng = auth()->user()->preferred_longitude ?? null;
     
-    return view('client.requests.create', compact('warehouses', 'availabilityByWarehouse', 'userPreferredLat', 'userPreferredLng'));
+    return view('client.requests.create', compact('warehouses', 'availabilityByWarehouse', 'filters', 'searching', 'userPreferredLat', 'userPreferredLng'));
 }
     
     public function store(Request $request, WarehouseAvailability $availability)
@@ -49,7 +59,7 @@ class ClientRequestHandler extends Controller
 
         $warehouse = Warehouse::where('status', 'approved')->findOrFail($request->warehouse_id);
         $start = $request->filled('preferred_start_date') ? \Illuminate\Support\Carbon::parse($request->preferred_start_date)->startOfDay() : today();
-        if ((float) $request->required_area > $availability->snapshot($warehouse, $start)['available']) {
+        if ((float) $request->required_area > $availability->snapshot($warehouse, $start, $start->copy()->addMonthsNoOverflow((int) $request->duration_months)->subDay())['available']) {
             throw ValidationException::withMessages(['required_area' => 'This much warehouse space is unavailable on the requested start date.']);
         }
 

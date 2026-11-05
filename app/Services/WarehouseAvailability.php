@@ -5,9 +5,48 @@ namespace App\Services;
 use App\Models\Warehouse;
 use App\Models\WarehouseRequest;
 use Carbon\CarbonInterface;
+use Illuminate\Support\Collection;
 
 class WarehouseAvailability
 {
+    public function search(array $filters = [])
+    {
+        $start = isset($filters['start_date']) ? \Illuminate\Support\Carbon::parse($filters['start_date'])->startOfDay() : today();
+        $end = isset($filters['end_date']) ? \Illuminate\Support\Carbon::parse($filters['end_date'])->startOfDay() : $start;
+
+        $warehouses = Warehouse::where('status', 'approved')->orderBy('name')
+            ->when(!empty($filters['location']), function ($query) use ($filters) {
+                $term = '%'.mb_strtolower($filters['location']).'%';
+                $query->where(fn ($match) => $match->whereRaw('LOWER(location) LIKE ?', [$term])
+                    ->orWhereRaw('LOWER(name) LIKE ?', [$term])->orWhereRaw('LOWER(address) LIKE ?', [$term]));
+            })
+            ->get();
+
+        $ids = $warehouses->modelKeys();
+        $agreements = WarehouseRequest::whereIn('status', ['assigned', 'reserved'])
+            ->where(fn ($query) => $query->whereIn('assigned_warehouse_id', $ids)
+                ->orWhere(fn ($original) => $original->whereNull('assigned_warehouse_id')->whereIn('warehouse_id', $ids)))
+            ->get()
+            ->groupBy(fn (WarehouseRequest $agreement) => $agreement->assigned_warehouse_id ?? $agreement->warehouse_id);
+
+        return $warehouses->each(function (Warehouse $warehouse) use ($filters, $start, $end, $agreements) {
+                $occupancy = $agreements->get($warehouse->id, collect());
+                $warehouse->current_availability = $this->snapshot($warehouse, agreements: $occupancy);
+                $warehouse->available_area = $this->snapshot($warehouse, $start, $end, agreements: $occupancy)['available'];
+                if (isset($filters['lat'], $filters['lng'], $warehouse->latitude, $warehouse->longitude)) {
+                    $lat = deg2rad((float) $filters['lat']);
+                    $target = deg2rad((float) $warehouse->latitude);
+                    $delta = deg2rad((float) $warehouse->longitude - (float) $filters['lng']);
+                    $warehouse->distance = 6371 * acos(max(-1, min(1, sin($lat) * sin($target) + cos($lat) * cos($target) * cos($delta))));
+                }
+            })
+            ->filter(fn (Warehouse $warehouse) => ($filters['include_unavailable'] ?? false) || ($warehouse->available_area > 0
+                && $warehouse->available_area >= ($filters['min_area'] ?? 0)
+                && (!isset($filters['lat'], $filters['lng']) || ($warehouse->distance ?? INF) <= ($filters['radius'] ?? 10))))
+            ->when(isset($filters['lat'], $filters['lng']), fn ($warehouses) => $warehouses->sortBy('distance'))
+            ->values();
+    }
+
     public function occupiedFor(Warehouse $warehouse)
     {
         return WarehouseRequest::whereIn('status', ['assigned', 'reserved'])
@@ -16,7 +55,7 @@ class WarehouseAvailability
             ->get();
     }
 
-    public function snapshot(Warehouse $warehouse, ?CarbonInterface $start = null, ?CarbonInterface $through = null, ?int $except = null): array
+    public function snapshot(Warehouse $warehouse, ?CarbonInterface $start = null, ?CarbonInterface $through = null, ?int $except = null, ?Collection $agreements = null): array
     {
         $start ??= today();
         $today = today();
@@ -26,7 +65,7 @@ class WarehouseAvailability
         $upcoming = [];
         $expiries = [];
 
-        foreach ($this->occupiedFor($warehouse) as $agreement) {
+        foreach ($agreements ?? $this->occupiedFor($warehouse) as $agreement) {
             $area = (float) ($agreement->space_required ?: $agreement->required_area ?: $capacity);
             $end = $agreement->agreementEnd();
             if ($agreement->id === $except) {

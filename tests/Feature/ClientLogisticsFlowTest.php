@@ -222,4 +222,33 @@ class ClientLogisticsFlowTest extends TestCase
         $this->assertSame($nextEnd->toDateString(), $agreement->fresh()->agreementEnd()->toDateString());
         $this->assertSame('completed', $renewal->fresh()->status);
     }
+
+    public function test_clients_and_admins_see_free_area_and_search_uses_remaining_capacity(): void
+    {
+        $client = User::factory()->create(['role' => 'client']);
+        $admin = User::factory()->create(['role' => 'admin', 'is_admin' => true]);
+        $warehouse = Warehouse::factory()->create([
+            'name' => 'Kalimati Storage', 'location' => 'Kathmandu', 'status' => 'approved', 'area_sqft' => 500,
+        ]);
+        Warehouse::factory()->create([
+            'name' => 'Pokhara Storage', 'location' => 'Pokhara', 'status' => 'approved', 'area_sqft' => 900,
+        ]);
+        \App\Models\WarehouseRequest::create([
+            'warehouse_id' => $warehouse->id, 'client_id' => $client->id,
+            'space_required' => 400, 'purpose' => 'Storage', 'status' => 'assigned',
+        ]);
+
+        foreach ([$client, $admin] as $user) {
+            $this->actingAs($user)->get(route('dashboard'))->assertOk()->assertSee('100.00 sq ft free');
+        }
+
+        $this->actingAs($client)->getJson(route('warehouses.search', [
+            'location' => 'Kathmandu', 'min_area' => 101,
+        ]))->assertOk()->assertJsonCount(0, 'warehouses');
+        $this->getJson(route('warehouses.search', [
+            'location' => 'Kathmandu', 'min_area' => 100,
+        ]))->assertOk()->assertJsonCount(1, 'warehouses')->assertJsonPath('warehouses.0.available_area', 100);
+        $this->get(route('my-requests.create', ['location' => 'Kathmandu', 'min_area' => 100]))
+            ->assertOk()->assertSee('Kalimati Storage')->assertDontSee('Pokhara Storage');
+    }
 }

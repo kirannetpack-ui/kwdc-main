@@ -7,62 +7,9 @@
 
 <div class="card mb-4">
     <div class="card-body">
-        <form id="ai-warehouse-search">
-            <div class="input-group">
-                <span class="input-group-text"><i class="fas fa-magic"></i></span>
-                <input type="text" 
-                       id="search-query" 
-                       class="form-control form-control-lg" 
-                       placeholder="Try: '10,000 sq ft warehouse with cold storage near Kalimati under Rs 50'">
-                <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-search"></i> AI Search
-                </button>
-            </div>
-            <small class="text-muted mt-2 d-block">
-                <i class="fas fa-robot"></i> Our local AI understands natural language.
-            </small>
-        </form>
+        <a class="btn btn-primary" href="{{ route('my-requests.create') }}">Search warehouse availability</a>
     </div>
 </div>
-
-<!-- Container to display warehouses -->
-<div id="warehouse-results">
-    @includeIf('warehouses.partials.list', ['warehouses' => $warehouses])
-</div>
-
-<script>
-document.getElementById('ai-warehouse-search').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    const query = document.getElementById('search-query').value;
-    const resultsDiv = document.getElementById('warehouse-results');
-    
-    resultsDiv.innerHTML = '<div class="text-center py-4"><i class="fas fa-spinner fa-spin fa-2x"></i><p>AI is thinking...</p></div>';
-
-    const response = await fetch('/warehouses/search?q=' + encodeURIComponent(query));
-    const data = await response.json();
-
-    // If results found, replace the list
-    if (data.warehouses.length > 0) {
-        let html = '<div class="row g-3">';
-        data.warehouses.forEach(w => {
-            html += `
-                <div class="col-md-4">
-                    <div class="warehouse-card p-3 border rounded">
-                        <h5>${w.name}</h5>
-                        <p class="text-muted small">${w.location}</p>
-                        <p class="small mb-0">${w.area_sqft} sq ft | रू ${w.price_per_sqft}/sqft</p>
-                        <a href="/warehouses/${w.id}" class="btn btn-sm btn-outline-primary mt-2">View</a>
-                    </div>
-                </div>
-            `;
-        });
-        html += '</div>';
-        resultsDiv.innerHTML = html;
-    } else {
-        resultsDiv.innerHTML = `<div class="alert alert-warning">No warehouses found matching your description. Try adjusting your search!</div>`;
-    }
-});
-</script>
 
 <div class="bg-white rounded-xl shadow-md p-6">
     @if(session('success'))

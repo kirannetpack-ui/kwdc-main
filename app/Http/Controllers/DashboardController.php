@@ -110,6 +110,7 @@ class DashboardController extends Controller
         return view('dashboard.index', array_merge($userData, [
             'stats' => $stats,
             'recentWarehouses' => $recentWarehouses,
+            'warehouseAvailability' => app(\App\Services\WarehouseAvailability::class)->search()->take(6),
             'recentDispatches' => $recentDispatches,
             'recentRequests' => $recentRequests,
             'isBirthday' => $isBirthday,
@@ -156,7 +157,7 @@ class DashboardController extends Controller
             ->orderBy('created_at', 'desc')->limit(5)->get();
         $recentInvoices = Invoice::whereIn('id', $invoiceIds)
             ->orderBy('created_at', 'desc')->limit(5)->get();
-        $availableWarehouses = Warehouse::where('status', 'approved')->limit(6)->get();
+        $availableWarehouses = app(\App\Services\WarehouseAvailability::class)->search()->take(6);
 
         return view('dashboard.index', array_merge($userData, [
             'stats' => $stats,
@@ -166,6 +167,7 @@ class DashboardController extends Controller
             'recentStocks' => $recentStocks,
             'recentInvoices' => $recentInvoices,
             'availableWarehouses' => $availableWarehouses,
+            'warehouseAvailability' => $availableWarehouses,
             'isBirthday' => $isBirthday,
             'birthdayMessage' => $birthdayMessage,
             'role' => 'client',
