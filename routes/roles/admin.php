@@ -16,6 +16,9 @@ Route::prefix('admin')->middleware(['admin'])->name('admin.')->group(function ()
     // Admin Dashboard
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
+    Route::get('/business-profile', [\App\Http\Controllers\Admin\BusinessProfileController::class, 'edit'])->name('business-profile.edit');
+    Route::put('/business-profile', [\App\Http\Controllers\Admin\BusinessProfileController::class, 'update'])->name('business-profile.update');
+
     // Warehouse Management
     Route::get('/pending', [AdminController::class, 'pending'])->name('pending');
     Route::post('/approve/{warehouse}', [AdminController::class, 'approve'])->name('approve');

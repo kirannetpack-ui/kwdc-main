@@ -117,7 +117,7 @@
                             </form>
 
                             @endif
-                            @if(config('payment.banking.accounts'))
+                            @if(app(\App\Services\BusinessSettings::class)->banking()['accounts'])
                             <!-- Direct Bank Transfer Button -->
                             <button type="button" 
                                     onclick="openBankTransferModal({{ $invoice->id }}, '{{ $invoice->invoice_number ?? ('INV-' . $invoice->id) }}', {{ $invAmount }})" 
@@ -127,7 +127,7 @@
                             </button>
 
                             @endif
-                            @if(config('payment.banking.qr.image_url'))
+                            @if(app(\App\Services\BusinessSettings::class)->banking()['qr']['image_url'])
                             <!-- Interbank Banking QR Button -->
                             <button type="button" 
                                     onclick="openBankingQrModal({{ $invoice->id }}, '{{ $invoice->invoice_number ?? ('INV-' . $invoice->id) }}', {{ $invAmount }})" 
@@ -210,7 +210,7 @@
                     <i class="fas fa-landmark text-emerald-600 mr-1"></i> Official KTM-WDC Bank Accounts
                 </label>
                 <div class="space-y-2">
-                    @foreach(config('payment.banking.accounts') as $account)
+                    @foreach(app(\App\Services\BusinessSettings::class)->banking()['accounts'] as $account)
                         <div class="rounded-xl border border-slate-200 p-3">
                             <strong>{{ $account['bank_name'] }}</strong>
                             <div>{{ $account['account_name'] }}</div>
@@ -227,7 +227,7 @@
                 <div>
                     <label class="block text-xs font-semibold text-slate-700 mb-1">Target KTM-WDC Bank <span class="text-rose-500">*</span></label>
                     <select name="bank_name" required class="w-full text-xs rounded-xl border border-slate-300 px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                        @foreach(config('payment.banking.accounts') as $account)
+                        @foreach(app(\App\Services\BusinessSettings::class)->banking()['accounts'] as $account)
                             <option value="{{ $account['bank_name'] }}">{{ $account['bank_name'] }}</option>
                         @endforeach
                     </select>
@@ -297,9 +297,9 @@
                     <span>Fonepay &amp; NepalPay Interbank QR</span>
                 </div>
 
-                @if(config('payment.banking.qr.image_url'))
-                    <img src="{{ config('payment.banking.qr.image_url') }}" alt="Bank-issued merchant QR" width="180" height="180" class="mx-auto">
-                    <p>{{ config('payment.banking.qr.merchant_name') }}</p>
+                @if(app(\App\Services\BusinessSettings::class)->banking()['qr']['image_url'])
+                    <img src="{{ app(\App\Services\BusinessSettings::class)->banking()['qr']['image_url'] }}" alt="Bank-issued merchant QR" width="180" height="180" class="mx-auto">
+                    <p>{{ app(\App\Services\BusinessSettings::class)->banking()['qr']['merchant_name'] }}</p>
                 @endif
             </div>
 

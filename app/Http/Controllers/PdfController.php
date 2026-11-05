@@ -39,7 +39,7 @@ class PdfController extends Controller
         if ($invoice) {
             return Pdf::loadView('pdf.invoice', [
                 'invoice' => $invoice,
-                'company' => config('company'),
+                'company' => app(\App\Services\BusinessSettings::class)->company(),
                 'deliveryCopy' => $dispatch,
             ])->download("Delivery_{$invoice->invoice_number}.pdf");
         }

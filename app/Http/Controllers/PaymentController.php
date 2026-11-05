@@ -512,7 +512,7 @@ class PaymentController extends Controller
      */
     public function bankTransferSubmit(Request $request)
     {
-        $bankNames = array_column(config('payment.banking.accounts'), 'bank_name');
+        $bankNames = array_column(app(\App\Services\BusinessSettings::class)->banking()['accounts'], 'bank_name');
         abort_if($bankNames === [], 503, 'Bank transfers are currently unavailable.');
 
         $request->validate([
@@ -573,7 +573,7 @@ class PaymentController extends Controller
      */
     public function bankingQrSubmit(Request $request)
     {
-        abort_unless(config('payment.banking.qr.image_url'), 503, 'Banking QR is currently unavailable.');
+        abort_unless(app(\App\Services\BusinessSettings::class)->banking()['qr']['image_url'], 503, 'Banking QR is currently unavailable.');
 
         $request->validate([
             'invoice_id' => 'required|exists:invoices,id',
@@ -606,7 +606,7 @@ class PaymentController extends Controller
                 'sender_bank' => $request->sender_bank ?: 'Mobile Banking App',
                 'voucher_path' => $voucherPath,
                 'voucher_disk' => 'private_uploads',
-                'merchant' => config('payment.banking.qr.merchant_name'),
+                'merchant' => app(\App\Services\BusinessSettings::class)->banking()['qr']['merchant_name'],
                 'submitted_at' => now()->toIso8601String(),
             ],
         ]);

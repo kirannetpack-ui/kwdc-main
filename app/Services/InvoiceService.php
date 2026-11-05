@@ -243,7 +243,7 @@ class InvoiceService
     // Get company details for invoice
     private function getCompanyDetails(): array
     {
-        return config('company') + ['logo' => asset('images/logo.png')];
+        return app(\App\Services\BusinessSettings::class)->company() + ['logo' => asset('images/logo.png')];
     }
     
     // Download invoice

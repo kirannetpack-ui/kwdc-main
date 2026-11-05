@@ -45,6 +45,8 @@ class AppServiceProvider extends ServiceProvider
 
     public function register()
     {
+        $this->app->scoped(\App\Services\BusinessSettings::class);
+
         // Register AI services with dependency injection
         $this->app->singleton(EnhancedAIService::class, function ($app) {
             return new EnhancedAIService();

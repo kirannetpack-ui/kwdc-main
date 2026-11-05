@@ -36,8 +36,9 @@ class ProductionPreflight extends Command
             $this->validateStorage($failures);
         }
         if ($this->option('check-database') && ! $phaseOneDemo) {
+            $company = app(\App\Services\BusinessSettings::class)->company();
             foreach (['name' => 'COMPANY_LEGAL_NAME', 'address' => 'COMPANY_ADDRESS', 'email' => 'COMPANY_EMAIL', 'pan' => 'COMPANY_PAN'] as $field => $variable) {
-                $this->requireFilled($failures, $variable, config("company.{$field}"));
+                $this->requireFilled($failures, $variable, $company[$field] ?? null);
             }
             $commands = \Illuminate\Support\Facades\Artisan::all();
             foreach (['shipments:update-status', 'invoices:send-reminders', 'drivers:verify-documents'] as $command) {

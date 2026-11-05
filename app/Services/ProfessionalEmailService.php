@@ -26,7 +26,7 @@ class ProfessionalEmailService
                     'id' => $dispatch->id,
                     'token' => $dispatch->tracking_token,
                 ]),
-                'support_phone' => config('company.phone'),
+                'support_phone' => app(\App\Services\BusinessSettings::class)->company()['phone'],
                 'company_logo' => config('app.logo_url'),
             ], function ($message) use ($recipient, $pdf, $dispatch) {
                 $message->to($recipient['email'], $recipient['name'])
@@ -43,7 +43,7 @@ class ProfessionalEmailService
         $data = [
             'dispatch' => $dispatch,
             'stops' => $dispatch->stops,
-            'company' => config('company'),
+            'company' => app(\App\Services\BusinessSettings::class)->company(),
             'generated_date' => now()->format('F d, Y H:i')
         ];
         

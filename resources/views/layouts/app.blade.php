@@ -229,6 +229,9 @@
         <a href="{{ route('admin.property-owners') }}" class="sidebar-link {{ request()->routeIs('admin.property-owners') ? 'active' : '' }}">
             <i class="fas fa-building"></i> {{ __('Property Owners') }}
         </a>
+        <a href="{{ route('admin.business-profile.edit') }}" class="sidebar-link {{ request()->routeIs('admin.business-profile.*') ? 'active' : '' }}">
+            <i class="fas fa-building"></i> Business Profile &amp; KYC
+        </a>
         <a href="{{ route('admin.invoices') }}" class="sidebar-link {{ request()->routeIs('admin.invoices') ? 'active' : '' }}">
             <i class="fas fa-file-invoice"></i> {{ __('Invoices') }}
         </a>

@@ -28,7 +28,7 @@ class SecurityHeaders
             "object-src 'none'",
         ];
 
-        foreach ([config('filesystems.disks.public.url'), config('payment.banking.qr.image_url')] as $imageUrl) {
+        foreach ([config('filesystems.disks.public.url'), $request->routeIs('payment.*') ? app(\App\Services\BusinessSettings::class)->banking()['qr']['image_url'] : null] as $imageUrl) {
             if (is_string($imageUrl) && preg_match('~^https://[a-z0-9.-]+(?::[0-9]+)?(?=/|$)~i', $imageUrl, $matches)) {
                 $cspDirectives[6] .= ' '.$matches[0];
             }
